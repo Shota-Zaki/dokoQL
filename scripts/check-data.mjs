@@ -1,12 +1,13 @@
 import '../fixes.js';
 import { DATASETS, DATASET_ORDER } from '../datasets.js';
 import { EXERCISES, EXERCISES_BY_DATASET } from '../exercises.js';
+await import('../contentIntegration.js');
 
 const expectedCounts = {
   bank: 75,
   store: 70,
   rpg: 70,
-  normalization: 16,
+  normalization: 22,
   design: 16,
 };
 
@@ -32,6 +33,8 @@ for (const exercise of EXERCISES) {
   }
 
   if (!exercise.answerSql?.trim()) errors.push(`${exercise.id}: answer example is missing`);
+  if (!exercise.referenceAnswerSql?.trim()) errors.push(`${exercise.id}: detailed answer example is missing`);
+  if (!exercise.referenceExplanation?.trim()) errors.push(`${exercise.id}: detailed explanation is missing`);
   if (!DATASETS[exercise.datasetId]) errors.push(`${exercise.id}: unknown dataset ${exercise.datasetId}`);
 }
 
