@@ -1,0 +1,11 @@
+{
+  "name": "sql-practice-lab",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "check": "node --check app.js && node --check datasets.js && node --check exercises.js && node --check fixes.js && node --check boot.js && node scripts/check-data.mjs"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}
