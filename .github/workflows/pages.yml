@@ -1,4 +1,4 @@
-name: Check static site
+name: Check and publish static site
 
 on:
   push:
@@ -12,9 +12,11 @@ on:
 
 permissions:
   contents: read
+  pages: write
+  id-token: write
 
 concurrency:
-  group: check-${{ github.ref }}
+  group: pages-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -35,3 +37,23 @@ jobs:
           test -f docs/boot.js
           test -f docs/learningContent.js
           test -f docs/content/data-8.js
+
+  deploy:
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    needs: check
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Configure Pages
+        uses: actions/configure-pages@v6
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: docs
+      - name: Deploy to Pages
+        id: deployment
+        uses: actions/deploy-pages@v5
