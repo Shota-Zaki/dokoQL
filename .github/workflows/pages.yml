@@ -36,8 +36,10 @@ jobs:
           test -f docs/index.html
           test -f docs/boot.js
           test -f docs/learningContent.js
+          test -f docs/tableGuideEnhancer.js
           test -f docs/hintEnhancer.js
           test -f docs/content/data-8.js
+          grep -q "tableGuideEnhancer.js" docs/boot.js
           grep -q "hintEnhancer.js" docs/boot.js
 
   deploy:
