@@ -71,6 +71,8 @@ Home
 │  ├─ Store-like dataset
 │  └─ RPG-like dataset
 ├─ Normalization Drill
+│  ├─ Basic 16 exercises
+│  └─ Comprehensive 6 exercises
 └─ Database Design Exercise
 ```
 
@@ -93,6 +95,8 @@ SQLをブラウザ内DBで実行し、SELECT結果、更新件数、エラーを
 
 SQL文字列の完全一致では判定しない。同じ結果を得る妥当な別解を許容する。
 
+判定用の基準SQLと、学習画面で表示する詳細な解答例は分離できる構造とする。これにより解説を改善しても自動判定を不用意に壊さない。
+
 ### Reset
 
 問題開始時のDBスナップショットに戻す。
@@ -101,10 +105,11 @@ SQL文字列の完全一致では判定しない。同じ結果を得る妥当�
 
 - 初期状態では折りたたむ
 - ユーザー操作でのみ表示
-- 解答SQL
+- 解答SQLまたは設計例
 - SQLを構成する考え方
-- 主要句・関数の説明
-- 代表的な別解または注意点
+- 実行結果の確認ポイント
+- 主要句・関数・正規化観点の説明
+- 必要に応じて代表的な別解や注意点
 
 ## 6. Data model
 
@@ -122,6 +127,9 @@ interface Exercise {
   hint?: string[];
   answerSql?: string;
   explanation?: string;
+  referenceAnswerSql?: string;
+  referenceExplanation?: string;
+  referenceCheck?: string;
   validation?: ValidationRule;
 }
 ```
@@ -151,6 +159,7 @@ DBそのものは学習結果とは分離し、問題単位で初期化可能に
 - ブラウザ内でPostgreSQL互換性の高いSQL実行環境を利用する
 - 外部サービスへのSQL送信を行わない
 - DB初期化SQL、問題、解答、判定ロジックをそれぞれ分離する
+- 詳細解説データはアプリ本体から分離し、必要時にブラウザ内で展開する
 - 将来的に別の学習ポータルへ統合しやすいよう、ルーティングとデータ層を疎結合にする
 
 ## 9. Responsive breakpoints
@@ -170,14 +179,14 @@ DBそのものは学習結果とは分離し、問題単位で初期化可能に
 
 ## 11. MVP completion criteria
 
-1. GitHub Pages相当の静的配信で起動できる
+1. 静的配信で起動できる
 2. SQL問題を選択できる
 3. テーブル定義と初期データを確認できる
 4. SQLを実行できる
 5. SELECT結果を表で確認できる
 6. 更新系SQLを実行できる
 7. DBを初期状態へ戻せる
-8. 問題の解答例と解説を表示できる
+8. 問題の解答例・考え方・確認ポイントを表示できる
 9. 学習進捗がブラウザに保存される
 10. PC / iPad / iPhone幅で操作できる
 
