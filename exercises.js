@@ -1,0 +1,322 @@
+const chapterNames = {
+  bank: {2:'基本文法と四大命令',3:'操作する行の絞り込み',4:'検索結果の加工',5:'式と関数',6:'集計とグループ化',7:'副問い合わせ',8:'複数テーブルの結合'},
+  store: {2:'基本文法と四大命令',3:'操作する行の絞り込み',4:'検索結果の加工',5:'式と関数',6:'集計とグループ化',7:'副問い合わせ',8:'複数テーブルの結合'},
+  rpg: {2:'基本文法と四大命令',3:'操作する行の絞り込み',4:'検索結果の加工',5:'式と関数',6:'集計とグループ化',7:'副問い合わせ',8:'複数テーブルの結合'},
+  normalization: {1:'第2正規形から第3正規形',2:'第1正規形から第2正規形',3:'非正規形から第1正規形'},
+  design: {1:'概念・論理・物理設計',2:'データ登録',3:'データ利用'},
+};
+
+const exp = (datasetId, chapter, number, type, prompt, answerSql, hint = [], options = {}) => ({
+  id: `${datasetId}-c${chapter}-q${number}`,
+  datasetId,
+  chapter,
+  chapterName: chapterNames[datasetId][chapter] || `Chapter ${chapter}`,
+  number,
+  type,
+  prompt,
+  answerSql,
+  hint: Array.isArray(hint) ? hint : [hint],
+  ordered: Boolean(options.ordered),
+  setupSql: options.setupSql || '',
+  explanation: options.explanation || (Array.isArray(hint) ? hint.join(' ') : hint),
+});
+
+const B = [];
+B.push(
+exp('bank',2,1,'select','口座の全行について、ワイルドカードを使わずに全列を取得する。',`SELECT 口座番号, 名義, 種別, 残高, 更新日\nFROM 口座;`,['全列名を明示する。']),
+exp('bank',2,2,'select','口座に登録されている口座番号だけをすべて取得する。',`SELECT 口座番号 FROM 口座;`,['SELECT句には必要な列だけを書く。']),
+exp('bank',2,3,'select','口座番号と残高をすべて取得する。',`SELECT 口座番号, 残高 FROM 口座;`,['複数列はカンマで区切る。']),
+exp('bank',2,4,'select','口座の全列・全行をワイルドカードで取得する。',`SELECT * FROM 口座;`,['* は全列を表す。']),
+exp('bank',2,5,'update','すべての口座について、名義を「XXX」に更新する。',`UPDATE 口座 SET 名義 = 'XXX';`,['WHERE句を付けないUPDATEは全行が対象。']),
+exp('bank',2,6,'update','全口座の残高を99,999,999円、更新日を2024-03-01に変更する。',`UPDATE 口座\nSET 残高 = 99999999, 更新日 = '2024-03-01';`,['SET句では複数列を同時に更新できる。']),
+exp('bank',2,7,'insert','次の3口座を登録する。1回のINSERTにつき1行ずつ登録する。\n0642191 / アオキ ハルカ / 普通 / 3,640,551 / 2024-03-13\n1039410 / キノシタ リュウジ / 普通 / 259,017 / 2023-11-30\n1239855 / タカシナ ミツル / 当座 / 6,509,773 / 更新日なし',`INSERT INTO 口座 VALUES ('0642191','アオキ　ハルカ','1',3640551,'2024-03-13');\nINSERT INTO 口座 VALUES ('1039410','キノシタ　リュウジ','1',259017,'2023-11-30');\nINSERT INTO 口座 VALUES ('1239855','タカシナ　ミツル','2',6509773,NULL);`,['更新日なしはNULLを使う。']),
+exp('bank',2,8,'delete','口座テーブルの全行を削除する。',`DELETE FROM 口座;`,['DELETEでWHEREを省略すると全行削除になる。']),
+
+exp('bank',3,9,'select','口座番号0037651の行を取得する。',`SELECT * FROM 口座 WHERE 口座番号 = '0037651';`,['CHAR型の値は文字列として比較する。']),
+exp('bank',3,10,'select','残高が0円より大きい口座を取得する。',`SELECT * FROM 口座 WHERE 残高 > 0;`,['比較演算子 > を使う。']),
+exp('bank',3,11,'select','口座番号が1000000より前の番号の口座を取得する。',`SELECT * FROM 口座 WHERE 口座番号 < '1000000';`,['固定長文字列でも同じ桁数なら辞書順比較で扱える。']),
+exp('bank',3,12,'select','更新日が2023年以前の口座を取得する。',`SELECT * FROM 口座 WHERE 更新日 < '2024-01-01';`,['2023年以前は2024-01-01より前。']),
+exp('bank',3,13,'select','残高が100万円以上の口座を取得する。',`SELECT * FROM 口座 WHERE 残高 >= 1000000;`,['以上は >=。']),
+exp('bank',3,14,'select','普通預金ではない口座を取得する。',`SELECT * FROM 口座 WHERE 種別 <> '1';`,['等しくない条件は <> が標準的。']),
+exp('bank',3,15,'select','更新日が登録されていない口座を取得する。',`SELECT * FROM 口座 WHERE 更新日 IS NULL;`,['NULLは = では比較しない。']),
+exp('bank',3,16,'select','名義に「ハシ」を含む口座を取得する。',`SELECT * FROM 口座 WHERE 名義 LIKE '%ハシ%';`,['% は任意長の文字列。']),
+exp('bank',3,17,'select','更新日が2024年1月中の口座を、1つの条件式で取得する。',`SELECT * FROM 口座\nWHERE 更新日 BETWEEN '2024-01-01' AND '2024-01-31';`,['BETWEENなら1つの条件式にまとめられる。']),
+exp('bank',3,18,'select','種別が当座または別段の口座を、1つの条件式で取得する。',`SELECT * FROM 口座 WHERE 種別 IN ('2','3');`,['複数候補の一致はINが簡潔。']),
+exp('bank',3,19,'select','名義が「サカタ リョウヘイ」「マツモト ミワコ」「ハマダ サトシ」のいずれかに一致する行を取得する。',`SELECT * FROM 口座\nWHERE 名義 IN ('サカタ　リョウヘイ','マツモト　ミワコ','ハマダ　サトシ');`,['完全一致の複数候補はIN。']),
+exp('bank',3,20,'select','更新日が2023-12-30から2024-01-04までの口座を取得する。',`SELECT * FROM 口座\nWHERE 更新日 BETWEEN '2023-12-30' AND '2024-01-04';`,['BETWEENの両端は範囲に含まれる。']),
+exp('bank',3,21,'select','残高が1万円未満で、かつ更新日が登録済みの口座を取得する。',`SELECT * FROM 口座\nWHERE 残高 < 10000 AND 更新日 IS NOT NULL;`,['ANDで条件を同時に満たす行を絞る。']),
+exp('bank',3,22,'select','次のどちらかを満たす口座を取得する。\n・口座番号が2000000番台\n・名義の姓が「エ」から始まる3文字で、名が「コ」で終わる',`SELECT * FROM 口座\nWHERE 口座番号 BETWEEN '2000000' AND '2999999'\n   OR 名義 LIKE 'エ＿＿　%コ';`,['LIKEでは _ が任意の1文字。日本語入力ではSQL上のアンダースコア「_」を2個使う。']),
+exp('bank',3,23,'design','口座・取引・取引事由の各テーブルで、主キーとなる列名を日本語で答える。',`口座: 口座番号\n取引: 取引番号\n取引事由: 取引事由ID`,['テーブル定義のPRIMARY KEYを確認する。']),
+
+exp('bank',4,24,'select','全口座を口座番号の昇順で取得する。ORDER BYでは列名とASCを明示する。',`SELECT * FROM 口座 ORDER BY 口座番号 ASC;`,['ASCは昇順。'],{ordered:true}),
+exp('bank',4,25,'select','重複しない名義を昇順で取得する。',`SELECT DISTINCT 名義 FROM 口座 ORDER BY 名義 ASC;`,['DISTINCTで重複を除く。'],{ordered:true}),
+exp('bank',4,26,'select','残高の高い順で全口座を取得し、同額なら口座番号の昇順にする。ORDER BYには列番号を使う。',`SELECT 口座番号, 名義, 種別, 残高, 更新日\nFROM 口座\nORDER BY 4 DESC, 1 ASC;`,['SELECTした4列目が残高、1列目が口座番号。'],{ordered:true}),
+exp('bank',4,27,'select','更新日がある口座を古い日付順に並べ、先頭10件だけ取得する。',`SELECT * FROM 口座\nWHERE 更新日 IS NOT NULL\nORDER BY 更新日 ASC\nLIMIT 10;`,['NULLを除いてからORDER BYとLIMIT。'],{ordered:true}),
+exp('bank',4,28,'select','残高0円と更新日未登録を除外し、残高の少ない順で11〜20件目を取得する。同額なら更新日の新しい順にする。',`SELECT 更新日, 残高 FROM 口座\nWHERE 残高 <> 0 AND 更新日 IS NOT NULL\nORDER BY 残高 ASC, 更新日 DESC\nLIMIT 10 OFFSET 10;`,['11件目からなのでOFFSET 10。'],{ordered:true}),
+exp('bank',4,29,'select','有効口座と解約済み口座の口座番号をまとめ、重複を除いて昇順にする。',`SELECT 口座番号 FROM 口座\nUNION\nSELECT 口座番号 FROM 廃止口座\nORDER BY 口座番号;`,['UNIONは重複を除く。'],{ordered:true}),
+exp('bank',4,30,'select','有効口座にある名義のうち、解約済み口座側に存在しない名義を取得する。重複を除き降順にする。',`SELECT 名義 FROM 口座\nEXCEPT\nSELECT 名義 FROM 廃止口座\nORDER BY 名義 DESC;`,['差集合はEXCEPT。'],{ordered:true}),
+exp('bank',4,31,'select','有効口座と解約済み口座の両方に存在する名義を昇順で取得する。',`SELECT 名義 FROM 口座\nINTERSECT\nSELECT 名義 FROM 廃止口座\nORDER BY 名義 ASC;`,['共通部分はINTERSECT。'],{ordered:true}),
+exp('bank',4,32,'select','有効口座と解約済み口座から、残高が0円ではない口座番号と残高をまとめ、口座番号順に表示する。',`SELECT 口座番号, 残高 FROM 口座 WHERE 残高 <> 0\nUNION ALL\nSELECT 口座番号, 解約時残高 FROM 廃止口座 WHERE 解約時残高 <> 0\nORDER BY 口座番号;`,['列数と型をそろえて集合演算する。'],{ordered:true}),
+
+exp('bank',5,33,'select','有効・解約済み双方の口座番号と名義をまとめ、状態が分かるよう有効は「○」、解約済みは「×」を付ける。名義順にする。',`SELECT 口座番号, 名義, '○' AS 状況 FROM 口座\nUNION ALL\nSELECT 口座番号, 名義, '×' AS 状況 FROM 廃止口座\nORDER BY 名義;`,['固定文字列をSELECT列として追加できる。'],{ordered:true}),
+exp('bank',5,34,'select','残高100万円以上の口座番号と残高を取得し、残高は千円単位で表示する。残高列の見出しは「千円単位の残高」。',`SELECT 口座番号, 残高 / 1000 AS "千円単位の残高"\nFROM 口座\nWHERE 残高 >= 1000000;`,['INTEGER同士の除算では整数結果になる。']),
+exp('bank',5,35,'insert','3口座を登録する。ただし登録時キャンペーンとして各残高に3,000円加算する。\n0652281 / タカギ ノブオ / 普通 / 100,000 / 2024-04-01\n1026413 / マツモト サワコ / 普通 / 300,000 / 2024-04-02\n2239710 / ササキ シゲノリ / 普通 / 1,000,000 / 2024-04-03',`INSERT INTO 口座 VALUES ('0652281','タカギ　ノブオ','1',100000 + 3000,'2024-04-01');\nINSERT INTO 口座 VALUES ('1026413','マツモト　サワコ','1',300000 + 3000,'2024-04-02');\nINSERT INTO 口座 VALUES ('2239710','ササキ　シゲノリ','1',1000000 + 3000,'2024-04-03');`,['VALUESの中でも式を使える。']),
+exp('bank',5,36,'update','直前のキャンペーン登録額が誤りだった。対象3口座から3,000円を戻し、その正しい残高に0.3%を上乗せした額へ更新する。',`UPDATE 口座\nSET 残高 = ((残高 - 3000) * 1.003)::INTEGER\nWHERE 口座番号 IN ('0652281','1026413','2239710');`,['まず3,000円を差し引いた値を基準に0.3%増やす。'],{setupSql:`INSERT INTO 口座 VALUES ('0652281','タカギ　ノブオ','1',103000,'2024-04-01'),('1026413','マツモト　サワコ','1',303000,'2024-04-02'),('2239710','ササキ　シゲノリ','1',1003000,'2024-04-03');`}),
+exp('bank',5,37,'select','更新日が2022年以前の口座について、口座番号・更新日・更新日の180日後を「通帳期限日」として取得する。',`SELECT 口座番号, 更新日, 更新日 + INTERVAL '180 days' AS 通帳期限日\nFROM 口座\nWHERE 更新日 < '2023-01-01';`,['日付にINTERVALを加算する。']),
+exp('bank',5,38,'select','別段預金の口座番号と名義を取得し、表示する名義の先頭に「カ」を付ける。',`SELECT 口座番号, 'カ' || 名義 AS 名義\nFROM 口座\nWHERE 種別 = '3';`,['文字列連結は ||。']),
+exp('bank',5,39,'select','口座に存在する種別コードを重複なく取得し、「種別コード」と日本語の「種別名」を表示する。',`SELECT DISTINCT 種別 AS 種別コード,\n  CASE 種別 WHEN '1' THEN '普通' WHEN '2' THEN '当座' WHEN '3' THEN '別段' END AS 種別名\nFROM 口座;`,['CASE式でコードを表示名へ変換する。']),
+exp('bank',5,40,'select','口座番号・名義・残高と残高ランクを表示する。10万円未満=C、10万円以上100万円未満=B、それ以外=A。',`SELECT 口座番号, 名義, 残高,\n  CASE WHEN 残高 < 100000 THEN 'C'\n       WHEN 残高 < 1000000 THEN 'B'\n       ELSE 'A' END AS 残高ランク\nFROM 口座;`,['範囲条件は上から順に評価する。']),
+exp('bank',5,41,'select','口座番号・名義と、名義の文字数を取得する。姓と名の間の全角スペースは文字数に含めない。',`SELECT 口座番号, 名義, LENGTH(REPLACE(名義, '　', '')) AS 文字数\nFROM 口座;`,['REPLACEで空白を除いてからLENGTH。']),
+exp('bank',5,42,'select','名義の1〜5文字目の範囲に「カワ」を含む口座を取得する。',`SELECT * FROM 口座\nWHERE SUBSTRING(名義 FROM 1 FOR 5) LIKE '%カワ%';`,['SUBSTRINGで対象範囲を切り出す。']),
+exp('bank',5,43,'select','残高が4桁以上で、1,000円未満の端数がない口座を取得する。桁数と端数判定には関数を使う。',`SELECT * FROM 口座\nWHERE LENGTH(残高::TEXT) >= 4\n  AND MOD(残高, 1000) = 0;`,['桁数は文字列化してLENGTH、端数はMOD。']),
+exp('bank',5,44,'select','口座番号・残高・利息を取得する。利息は残高×0.02%で、1円未満を切り捨てる。',`SELECT 口座番号, 残高, FLOOR(残高 * 0.0002) AS 利息\nFROM 口座;`,['0.02% = 0.0002。切り捨てはFLOOR。']),
+exp('bank',5,45,'select','口座番号・残高・残高別利息を取得する。50万円未満=0.01%、50万円以上200万円未満=0.02%、200万円以上=0.03%。1円未満切り捨て。利息降順、同額なら口座番号昇順。',`SELECT 口座番号, 残高,\n  FLOOR(残高 * CASE WHEN 残高 < 500000 THEN 0.0001 WHEN 残高 < 2000000 THEN 0.0002 ELSE 0.0003 END) AS 残高別利息\nFROM 口座\nORDER BY 残高別利息 DESC, 口座番号 ASC;`,['CASEで適用利率を分ける。'],{ordered:true}),
+exp('bank',5,46,'insert','3口座を登録し、更新日には現在日付を返す関数を使う。\n0351262 / イトカワ ダイ / 当座 / 635,110\n1015513 / アキツ ジュンジ / 普通 / 88,463\n1739298 / ホシノ サトミ / 普通 / 704,610',`INSERT INTO 口座 VALUES ('0351262','イトカワ　ダイ','2',635110,CURRENT_DATE);\nINSERT INTO 口座 VALUES ('1015513','アキツ　ジュンジ','1',88463,CURRENT_DATE);\nINSERT INTO 口座 VALUES ('1739298','ホシノ　サトミ','1',704610,CURRENT_DATE);`,['CURRENT_DATEを使う。']),
+exp('bank',5,47,'select','更新日が2024年以降の行を取得し、更新日を「2024年 01月 01日」のような形式で表示する。',`SELECT 口座番号, 名義, 種別, 残高, TO_CHAR(更新日, 'YYYY年 MM月 DD日') AS 更新日\nFROM 口座\nWHERE 更新日 >= '2024-01-01';`,['TO_CHARで日付表示形式を指定する。']),
+exp('bank',5,48,'select','口座の更新日を取得し、NULLなら「設定なし」と表示する。',`SELECT COALESCE(TO_CHAR(更新日, 'YYYY-MM-DD'), '設定なし') AS 更新日\nFROM 口座;`,['DATEと文字列を混ぜるため、日付をTO_CHARしてからCOALESCE。']),
+
+exp('bank',6,49,'select','残高について合計・最大・最小・平均・登録件数を1行で求める。',`SELECT SUM(残高) AS 合計, MAX(残高) AS 最大, MIN(残高) AS 最小, AVG(残高) AS 平均, COUNT(*) AS 登録件数\nFROM 口座;`,['代表的な集計関数を使う。']),
+exp('bank',6,50,'select','普通以外・残高100万円以上・更新日2023年以前の3条件をすべて満たす件数を求める。',`SELECT COUNT(*) AS 件数 FROM 口座\nWHERE 種別 <> '1' AND 残高 >= 1000000 AND 更新日 < '2024-01-01';`,['WHEREで絞ってからCOUNT。']),
+exp('bank',6,51,'select','更新日が未登録の件数を求める。ただしWHERE句は使わない。',`SELECT COUNT(*) - COUNT(更新日) AS 未登録件数 FROM 口座;`,['COUNT(列)はNULLを数えない。']),
+exp('bank',6,52,'select','名義の最大値と最小値を求める。',`SELECT MAX(名義) AS 最大値, MIN(名義) AS 最小値 FROM 口座;`,['文字列にもMAX/MINを使える。']),
+exp('bank',6,53,'select','最も新しい更新日と最も古い更新日を求める。',`SELECT MAX(更新日) AS 最新, MIN(更新日) AS 最古 FROM 口座;`,['DATE型にもMAX/MIN。']),
+exp('bank',6,54,'select','種別ごとに残高の合計・最大・最小・平均・登録件数を求める。',`SELECT 種別, SUM(残高) AS 合計, MAX(残高) AS 最大, MIN(残高) AS 最小, AVG(残高) AS 平均, COUNT(*) AS 件数\nFROM 口座\nGROUP BY 種別;`,['GROUP BYで種別単位に集計する。']),
+exp('bank',6,55,'select','口座番号の末尾1桁が同じものをグループ化し、各グループの件数を多い順に求める。',`SELECT RIGHT(口座番号, 1) AS 末尾, COUNT(*) AS 件数\nFROM 口座\nGROUP BY RIGHT(口座番号, 1)\nORDER BY 件数 DESC;`,['RIGHTで末尾1文字を取り出す。'],{ordered:true}),
+exp('bank',6,56,'select','更新日の年ごとに残高の合計・最大・最小・平均・件数を求める。更新日なしは「XXXX年」として集計する。',`SELECT COALESCE(TO_CHAR(更新日, 'YYYY'), 'XXXX') || '年' AS 年,\n       SUM(残高) AS 合計, MAX(残高) AS 最大, MIN(残高) AS 最小, AVG(残高) AS 平均, COUNT(*) AS 件数\nFROM 口座\nGROUP BY COALESCE(TO_CHAR(更新日, 'YYYY'), 'XXXX');`,['NULLをCOALESCEで同一グループ名へ変換する。']),
+exp('bank',6,57,'select','種別ごとの残高合計と件数を求め、合計が300万円以下のグループは除外する。',`SELECT 種別, SUM(残高) AS 合計, COUNT(*) AS 件数\nFROM 口座\nGROUP BY 種別\nHAVING SUM(残高) > 3000000;`,['集計結果への条件はHAVING。']),
+exp('bank',6,58,'select','名義の先頭1文字ごとに件数と平均文字数を求める。全角スペースは文字数から除外し、件数10以上または平均文字数5超のグループだけ取得する。',`SELECT LEFT(名義, 1) AS 先頭文字, COUNT(*) AS 件数,\n       AVG(LENGTH(REPLACE(名義, '　', ''))) AS 平均文字数\nFROM 口座\nGROUP BY LEFT(名義, 1)\nHAVING COUNT(*) >= 10 OR AVG(LENGTH(REPLACE(名義, '　', ''))) > 5;`,['GROUP BYの式とSELECTの式をそろえる。']),
+
+exp('bank',7,59,'update','口座0351333について、2024-01-11の取引結果（入金合計−出金合計）を現在残高へ反映する。SET句で取引を副問い合わせする。',`UPDATE 口座\nSET 残高 = 残高 + (\n  SELECT COALESCE(SUM(入金額),0) - COALESCE(SUM(出金額),0)\n  FROM 取引\n  WHERE 口座番号 = '0351333' AND 日付 = '2024-01-11'\n)\nWHERE 口座番号 = '0351333';`,['SETする値をスカラー副問い合わせで求める。']),
+exp('bank',7,60,'select','口座1115600について、現在残高と2023-12-28の入金合計・出金合計を取得する。SELECT句で取引を副問い合わせする。',`SELECT 口座番号, 残高,\n  (SELECT SUM(入金額) FROM 取引 WHERE 口座番号='1115600' AND 日付='2023-12-28') AS 入金合計,\n  (SELECT SUM(出金額) FROM 取引 WHERE 口座番号='1115600' AND 日付='2023-12-28') AS 出金合計\nFROM 口座\nWHERE 口座番号='1115600';`,['SELECT句のスカラー副問い合わせを2つ使う。']),
+exp('bank',7,61,'select','1回の取引で100万円以上の入金実績がある有効口座について、口座番号・名義・残高を取得する。WHERE句でIN副問い合わせを使う。',`SELECT 口座番号, 名義, 残高 FROM 口座\nWHERE 口座番号 IN (SELECT 口座番号 FROM 取引 WHERE 入金額 >= 1000000);`,['副問い合わせで対象口座番号集合を作る。']),
+exp('bank',7,62,'select','口座の更新日が、その口座の全取引日より未来になっている行を取得する。WHERE句でALLを使った副問い合わせにする。',`SELECT * FROM 口座 k\nWHERE 更新日 > ALL (SELECT 日付 FROM 取引 t WHERE t.口座番号 = k.口座番号);`,['相関副問い合わせとALLを組み合わせる。']),
+exp('bank',7,63,'select','口座3104451について、入金と出金の両方が発生した最新日を求め、これまでの最大入金額・最大出金額も表示する。FROM句で副問い合わせを使う。',`SELECT x.日付,\n  (SELECT MAX(入金額) FROM 取引 WHERE 口座番号='3104451') AS 最大入金額,\n  (SELECT MAX(出金額) FROM 取引 WHERE 口座番号='3104451') AS 最大出金額\nFROM (\n  SELECT 日付 FROM 取引\n  WHERE 口座番号='3104451'\n  GROUP BY 日付\n  HAVING COUNT(入金額) > 0 AND COUNT(出金額) > 0\n  ORDER BY 日付 DESC LIMIT 1\n) x;`,['FROM句の副問い合わせで「両方があった最新日」を1行に絞る。']),
+exp('bank',7,64,'insert','口座2761055を解約する。副問い合わせを使って解約済み口座へ登録し、その後、有効口座から削除する。',`INSERT INTO 廃止口座 (口座番号, 名義, 種別, 解約時残高, 解約日)\nSELECT 口座番号, 名義, 種別, 残高, CURRENT_DATE\nFROM 口座 WHERE 口座番号='2761055';\n\nDELETE FROM 口座 WHERE 口座番号='2761055';`,['INSERT ... SELECTで既存行を別テーブルへ移せる。']),
+
+exp('bank',8,65,'select','口座0311240・1234161・2750902の取引履歴を取得する。口座番号・日付・取引事由名・取引金額を表示し、取引金額は入金額または出金額の存在する方を使う。',`SELECT t.口座番号, t.日付, r.取引事由名, COALESCE(t.入金額, t.出金額) AS 取引金額\nFROM 取引 t\nJOIN 取引事由 r ON r.取引事由ID = t.取引事由ID\nWHERE t.口座番号 IN ('0311240','1234161','2750902');`,['取引と取引事由をIDで結合する。']),
+exp('bank',8,66,'select','口座0887132について、口座番号・名義・残高と、取引日・入金額・出金額を古い取引順に表示する。',`SELECT k.口座番号, k.名義, k.残高, t.日付, t.入金額, t.出金額\nFROM 口座 k\nJOIN 取引 t ON t.口座番号 = k.口座番号\nWHERE k.口座番号='0887132'\nORDER BY t.日付 ASC;`,['口座番号で内部結合する。'],{ordered:true}),
+exp('bank',8,67,'select','2022年1月1日以降に取引があった有効口座の口座番号を重複なく取得し、名義・残高も表示する。解約済み口座は除外する。',`SELECT DISTINCT k.口座番号, k.名義, k.残高\nFROM 口座 k\nJOIN 取引 t ON t.口座番号 = k.口座番号\nWHERE t.日付 >= '2022-01-01';`,['有効口座を基点にJOINすれば解約済みは入らない。']),
+exp('bank',8,68,'select','直前の条件を、解約済み口座も漏れなく含むよう変更する。解約済みは名義に「解約済み」、残高0を表示する。',`SELECT DISTINCT k.口座番号, k.名義, k.残高\nFROM 口座 k JOIN 取引 t ON t.口座番号=k.口座番号\nWHERE t.日付 >= '2022-01-01'\nUNION\nSELECT DISTINCT h.口座番号, '解約済み' AS 名義, 0 AS 残高\nFROM 廃止口座 h JOIN 取引 t ON t.口座番号=h.口座番号\nWHERE t.日付 >= '2022-01-01';`,['有効・解約済みをそれぞれ結合してUNIONする。']),
+exp('bank',8,69,'select','取引を「取引事由ID:取引事由名」の形式で表示する。事由マスタに存在しないIDの取引も落とさない。',`SELECT t.取引番号, t.日付, t.口座番号,\n       t.取引事由ID || ':' || COALESCE(r.取引事由名, '不明') AS 取引事由,\n       t.入金額, t.出金額\nFROM 取引 t\nLEFT JOIN 取引事由 r ON r.取引事由ID=t.取引事由ID;`,['取引を左側にしたLEFT JOINで取引行を保持する。']),
+exp('bank',8,70,'select','取引と取引事由を結合し、取引事由IDと取引事由名を重複なく表示する。未使用事由と、マスタ不在の事由のどちらも考慮する。',`SELECT DISTINCT COALESCE(t.取引事由ID, r.取引事由ID) AS 取引事由ID, r.取引事由名\nFROM 取引 t\nFULL OUTER JOIN 取引事由 r ON r.取引事由ID=t.取引事由ID;`,['両側の未一致行を残すにはFULL OUTER JOIN。']),
+exp('bank',8,71,'select','口座0887132の口座情報と取引情報に、取引事由名も追加して古い順に表示する。',`SELECT k.口座番号, k.名義, k.残高, t.日付, r.取引事由名, t.入金額, t.出金額\nFROM 口座 k\nJOIN 取引 t ON t.口座番号=k.口座番号\nLEFT JOIN 取引事由 r ON r.取引事由ID=t.取引事由ID\nWHERE k.口座番号='0887132'\nORDER BY t.日付;`,['3テーブルを順に結合する。'],{ordered:true}),
+exp('bank',8,72,'select','現在残高500万円以上の口座について、2024年以降に1回100万円以上の入金があった実績を抽出する。口座番号・名義・残高・取引日・取引事由ID・入金額・出金額を表示し、副問い合わせは使わない。',`SELECT k.口座番号, k.名義, k.残高, t.日付, t.取引事由ID, t.入金額, t.出金額\nFROM 口座 k\nJOIN 取引 t ON t.口座番号=k.口座番号\nWHERE k.残高 >= 5000000 AND t.日付 >= '2024-01-01' AND t.入金額 >= 1000000;`,['JOIN後に両テーブルの条件をWHEREで絞る。']),
+exp('bank',8,73,'select','直前の検索を、結合相手側に副問い合わせを使う形へ変更する。',`SELECT k.口座番号, k.名義, k.残高, t.日付, t.取引事由ID, t.入金額, t.出金額\nFROM 口座 k\nJOIN (SELECT * FROM 取引 WHERE 日付 >= '2024-01-01' AND 入金額 >= 1000000) t\n  ON t.口座番号=k.口座番号\nWHERE k.残高 >= 5000000;`,['JOINする取引をFROM句の副問い合わせで先に絞る。']),
+exp('bank',8,74,'select','同一口座で同じ日に3回以上取引した実績について、口座番号・回数・名義を取得する。',`SELECT x.口座番号, x.回数, k.名義\nFROM (\n  SELECT 口座番号, 日付, COUNT(*) AS 回数\n  FROM 取引\n  GROUP BY 口座番号, 日付\n  HAVING COUNT(*) >= 3\n) x\nJOIN 口座 k ON k.口座番号=x.口座番号;`,['まず口座番号+日付で回数を集計してから名義を結合する。']),
+exp('bank',8,75,'select','同じ名義で複数口座を持つ顧客を監査する。名義・口座番号・種別・残高・更新日を、名義→口座番号の昇順で表示する。',`SELECT 名義, 口座番号, 種別, 残高, 更新日\nFROM 口座\nWHERE 名義 IN (SELECT 名義 FROM 口座 GROUP BY 名義 HAVING COUNT(*) > 1)\nORDER BY 名義, 口座番号;`,['重複名義を副問い合わせで抽出する。'],{ordered:true})
+);
+
+const S = [];
+S.push(
+exp('store',2,1,'select','商品テーブルの全行について、ワイルドカードを使わず全列を取得する。',`SELECT 商品コード, 商品名, 単価, 商品区分, 関連商品コード FROM 商品;`,['全列名を明示する。']),
+exp('store',2,2,'select','すべての商品名を取得する。',`SELECT 商品名 FROM 商品;`,['必要な列だけSELECT。']),
+exp('store',2,3,'select','注文テーブルの全行について、ワイルドカードを使わず全列を取得する。',`SELECT 注文日, 注文番号, 注文枝番, 商品コード, 数量, クーポン割引料 FROM 注文;`,['注文の全列を列挙する。']),
+exp('store',2,4,'select','注文番号・注文枝番・商品コードをすべて取得する。',`SELECT 注文番号, 注文枝番, 商品コード FROM 注文;`,['3列をSELECTする。']),
+exp('store',2,5,'insert','次の商品を1回の実行につき1件ずつ登録する。\nW0461 / 冬のあったかコート / 12,800 / 衣類\nS0331 / 春のさわやかコート / 6,800 / 衣類\nA0582 / 秋のシックなコート / 9,800 / 衣類',`INSERT INTO 商品 (商品コード,商品名,単価,商品区分) VALUES ('W0461','冬のあったかコート',12800,'1');\nINSERT INTO 商品 (商品コード,商品名,単価,商品区分) VALUES ('S0331','春のさわやかコート',6800,'1');\nINSERT INTO 商品 (商品コード,商品名,単価,商品区分) VALUES ('A0582','秋のシックなコート',9800,'1');`,['関連商品コードを省略する場合は列リストを明示する。']),
+
+exp('store',3,6,'select','商品コードW1252の商品を取得する。',`SELECT * FROM 商品 WHERE 商品コード='W1252';`,['商品コードを完全一致で絞る。']),
+exp('store',3,7,'update','商品コードS0023の単価を500円へ変更する。',`UPDATE 商品 SET 単価=500 WHERE 商品コード='S0023';`,['主キーで対象を限定する。']),
+exp('store',3,8,'select','単価が5万円以下の商品を取得する。',`SELECT * FROM 商品 WHERE 単価 <= 50000;`,['以下は <=。']),
+exp('store',3,9,'select','単価が5万円以上の商品を取得する。',`SELECT * FROM 商品 WHERE 単価 >= 50000;`,['以上は >=。']),
+exp('store',3,10,'select','2024年以降の注文を取得する。',`SELECT * FROM 注文 WHERE 注文日 >= '2024-01-01';`,['年の先頭日を境界にする。']),
+exp('store',3,11,'select','2023年11月以前の注文を取得する。',`SELECT * FROM 注文 WHERE 注文日 < '2023-12-01';`,['11月末まで = 12月1日より前。']),
+exp('store',3,12,'select','衣類ではない商品を取得する。',`SELECT * FROM 商品 WHERE 商品区分 <> '1';`,['衣類コード1以外。']),
+exp('store',3,13,'select','クーポン割引を使っていない注文を取得する。',`SELECT * FROM 注文 WHERE クーポン割引料 IS NULL;`,['NULL判定はIS NULL。']),
+exp('store',3,14,'delete','商品コードがNで始まる商品を削除する。',`DELETE FROM 商品 WHERE 商品コード LIKE 'N%';`,['前方一致は LIKE \'N%\'。']),
+exp('store',3,15,'select','商品名に「コート」を含む商品の商品コード・商品名・単価を取得する。',`SELECT 商品コード, 商品名, 単価 FROM 商品 WHERE 商品名 LIKE '%コート%';`,['部分一致は前後に%。']),
+exp('store',3,16,'select','商品区分が「靴」「雑貨」「未分類」のいずれかの商品コードと区分を、1つの条件式で取得する。',`SELECT 商品コード, 商品区分 FROM 商品 WHERE 商品区分 IN ('2','3','9');`,['INで候補を列挙する。']),
+exp('store',3,17,'select','商品コードがA0100〜A0500の範囲の商品を、1つの条件式で取得する。',`SELECT * FROM 商品 WHERE 商品コード BETWEEN 'A0100' AND 'A0500';`,['同じ桁構成ならBETWEENで範囲指定できる。']),
+exp('store',3,18,'select','N0501・N1021・N0223のいずれかを注文した注文データを取得する。',`SELECT * FROM 注文 WHERE 商品コード IN ('N0501','N1021','N0223');`,['複数の完全一致はIN。']),
+exp('store',3,19,'select','雑貨で、商品名に「水玉」を含む商品を取得する。',`SELECT * FROM 商品 WHERE 商品区分='3' AND 商品名 LIKE '%水玉%';`,['ANDで区分と名称条件を両方満たす。']),
+exp('store',3,20,'select','商品名に「軽い」または「ゆるふわ」のどちらかを含む商品を取得する。',`SELECT * FROM 商品 WHERE 商品名 LIKE '%軽い%' OR 商品名 LIKE '%ゆるふわ%';`,['ORでどちらかを満たす。']),
+exp('store',3,21,'select','衣類で単価3,000円以下、または雑貨で単価1万円以上の商品を取得する。',`SELECT * FROM 商品\nWHERE (商品区分='1' AND 単価 <= 3000)\n   OR (商品区分='3' AND 単価 >= 10000);`,['ANDのまとまりを括弧で明確にする。']),
+exp('store',3,22,'select','2024年3月中に、1つの注文明細で数量3個以上だった商品コードを取得する。',`SELECT 商品コード FROM 注文\nWHERE 注文日 BETWEEN '2024-03-01' AND '2024-03-31' AND 数量 >= 3;`,['日付範囲と数量条件をAND。']),
+exp('store',3,23,'select','数量10個以上、またはクーポン割引を使った注文データを取得する。',`SELECT * FROM 注文 WHERE 数量 >= 10 OR クーポン割引料 IS NOT NULL;`,['クーポン利用はNULLでないこと。']),
+exp('store',3,24,'design','商品テーブルと注文テーブルで、主キーとなる列名を日本語で答える。',`商品: 商品コード\n注文: 注文日 + 注文番号 + 注文枝番`,['注文は複合主キー。']),
+
+exp('store',4,25,'select','衣類の商品について、商品コードの降順で商品コードと商品名を取得する。',`SELECT 商品コード, 商品名 FROM 商品 WHERE 商品区分='1' ORDER BY 商品コード DESC;`,['WHEREの後にORDER BY。'],{ordered:true}),
+exp('store',4,26,'select','2024年3月以降の注文を、主キーの昇順で取得する。出力列は注文日・注文番号・注文枝番・商品コード・数量。',`SELECT 注文日, 注文番号, 注文枝番, 商品コード, 数量\nFROM 注文\nWHERE 注文日 >= '2024-03-01'\nORDER BY 注文日, 注文番号, 注文枝番;`,['複合主キーの列順でORDER BY。'],{ordered:true}),
+exp('store',4,27,'select','これまで注文された商品コードを重複なく、昇順で取得する。',`SELECT DISTINCT 商品コード FROM 注文 ORDER BY 商品コード;`,['DISTINCT + ORDER BY。'],{ordered:true}),
+exp('store',4,28,'select','注文のあった日付を新しい順に10行取得する。同じ日付が複数行あっても除外しない。',`SELECT 注文日 FROM 注文 ORDER BY 注文日 DESC LIMIT 10;`,['DISTINCTを使わず行単位でLIMIT。'],{ordered:true}),
+exp('store',4,29,'select','商品を単価の安い順に並べ、6〜20行目を取得する。同額なら商品区分→商品コードの昇順。',`SELECT * FROM 商品\nORDER BY 単価 ASC, 商品区分 ASC, 商品コード ASC\nLIMIT 15 OFFSET 5;`,['6行目開始なのでOFFSET 5、15行取得。'],{ordered:true}),
+exp('store',4,30,'select','廃番商品から、2022年12月に廃番になったもの、または売上個数が100を超えるものを取得し、売上個数の多い順に並べる。',`SELECT * FROM 廃番商品\nWHERE 廃番日 BETWEEN '2022-12-01' AND '2022-12-31' OR 売上個数 > 100\nORDER BY 売上個数 DESC;`,['日付条件と売上条件をORで結ぶ。'],{ordered:true}),
+exp('store',4,31,'select','現在の商品コードのうち、これまで一度も注文されていないコードを昇順で取得する。',`SELECT 商品コード FROM 商品\nEXCEPT\nSELECT 商品コード FROM 注文\nORDER BY 商品コード;`,['差集合EXCEPT。'],{ordered:true}),
+exp('store',4,32,'select','注文実績にある商品コードのうち、現在の商品テーブルに存在しないコードを取得する。',`SELECT 商品コード FROM 注文\nEXCEPT\nSELECT 商品コード FROM 商品;`,['注文側−商品側の差集合。']),
+exp('store',4,33,'select','未分類で、単価1,000円以下または1万円超の商品について、商品コード・商品名・単価を安い順、同額なら商品コード順に取得する。',`SELECT 商品コード, 商品名, 単価 FROM 商品\nWHERE 商品区分='9' AND (単価 <= 1000 OR 単価 > 10000)\nORDER BY 単価, 商品コード;`,['区分条件と価格のOR条件を括弧でまとめる。'],{ordered:true}),
+
+exp('store',5,34,'select','未分類の商品について商品コード・単価・キャンペーン価格を取得する。キャンペーン価格は単価の5%引きで1円未満切り捨て。商品コード順。',`SELECT 商品コード, 単価, FLOOR(単価 * 0.95) AS キャンペーン価格\nFROM 商品\nWHERE 商品区分='9'\nORDER BY 商品コード;`,['5%引きは95%を掛ける。'],{ordered:true}),
+exp('store',5,35,'update','2024-03-12〜14の注文で、数量2個以上かつ既にクーポン利用済みの行について、さらに300円割り引くようクーポン割引料を更新する。',`UPDATE 注文\nSET クーポン割引料 = クーポン割引料 + 300\nWHERE 注文日 BETWEEN '2024-03-12' AND '2024-03-14'\n  AND 数量 >= 2 AND クーポン割引料 IS NOT NULL;`,['割引額を表す列なので300を加算する。']),
+exp('store',5,36,'update','注文番号202402250126の商品W0154について、注文数量を1個減らす。',`UPDATE 注文 SET 数量 = 数量 - 1\nWHERE 注文番号='202402250126' AND 商品コード='W0154';`,['現在値を使った更新。']),
+exp('store',5,37,'select','注文番号が202310010001〜202310319999の注文を取得し、注文番号と枝番を「-」で連結した1項目として表示する。',`SELECT 注文番号 || '-' || 注文枝番 AS 注文識別子, 商品コード, 数量, クーポン割引料\nFROM 注文\nWHERE 注文番号 BETWEEN '202310010001' AND '202310319999';`,['文字列連結は ||。']),
+exp('store',5,38,'select','商品に存在する商品区分を重複なく取得し、区分コードと日本語の区分名を表示する。',`SELECT DISTINCT 商品区分 AS 区分,\n CASE 商品区分 WHEN '1' THEN '衣類' WHEN '2' THEN '靴' WHEN '3' THEN '雑貨' WHEN '9' THEN '未分類' END AS 区分名\nFROM 商品;`,['CASEでコード名を表示する。']),
+exp('store',5,39,'select','商品コード・商品名・単価・販売価格ランク・商品区分を取得する。3,000円未満=S、3,000円以上1万円未満=M、1万円以上=L。商品区分は「コード:日本語名」。単価→商品コードの昇順。',`SELECT 商品コード, 商品名, 単価,\n CASE WHEN 単価 < 3000 THEN 'S' WHEN 単価 < 10000 THEN 'M' ELSE 'L' END AS 販売価格ランク,\n 商品区分 || ':' || CASE 商品区分 WHEN '1' THEN '衣類' WHEN '2' THEN '靴' WHEN '3' THEN '雑貨' WHEN '9' THEN '未分類' END AS 商品区分\nFROM 商品\nORDER BY 単価, 商品コード;`,['CASEと文字列連結を組み合わせる。'],{ordered:true}),
+exp('store',5,40,'select','商品名が10文字を超える商品と文字数を取得し、文字数の昇順に並べる。',`SELECT 商品コード, 商品名, LENGTH(商品名) AS 文字数\nFROM 商品\nWHERE LENGTH(商品名) > 10\nORDER BY 文字数;`,['LENGTHをWHEREとSELECTの両方で使う。'],{ordered:true}),
+exp('store',5,41,'select','注文日と注文番号を取得する。注文番号は日付8桁を除き、末尾4桁の連番だけを表示する。',`SELECT 注文日, RIGHT(注文番号, 4) AS 注文番号 FROM 注文;`,['RIGHTで末尾4文字。']),
+exp('store',5,42,'update','商品コードの先頭文字がMの商品について、先頭をEへ変更する。',`UPDATE 商品\nSET 商品コード = 'E' || SUBSTRING(商品コード FROM 2)\nWHERE 商品コード LIKE 'M%';`,['先頭以外をSUBSTRINGで残す。']),
+exp('store',5,43,'select','注文番号の連番部分が1000〜2000の注文番号を、連番4桁の昇順で取得する。',`SELECT 注文番号 FROM 注文\nWHERE RIGHT(注文番号,4)::INTEGER BETWEEN 1000 AND 2000\nORDER BY RIGHT(注文番号,4)::INTEGER;`,['末尾4桁を整数化して範囲比較。'],{ordered:true}),
+exp('store',5,44,'update','商品コードS1990の廃番日を現在日付に修正する。',`UPDATE 廃番商品 SET 廃番日 = CURRENT_DATE WHERE 商品コード='S1990';`,['現在日はCURRENT_DATE。']),
+exp('store',5,45,'select','1万円以上の商品について、商品コード・商品名・現在単価と、30%値下げ後の単価を取得する。値下げ後は1円未満切り捨て。',`SELECT 商品コード, 商品名, 単価, FLOOR(単価 * 0.7) AS "値下げした単価"\nFROM 商品\nWHERE 単価 >= 10000;`,['30%引き = 70%を掛ける。']),
+
+exp('store',6,46,'select','これまで注文された数量の合計を求める。',`SELECT SUM(数量) AS 注文数量合計 FROM 注文;`,['SUMで数量を合計。']),
+exp('store',6,47,'select','注文日ごとに注文行数を求める。',`SELECT 注文日, COUNT(*) AS 注文件数 FROM 注文 GROUP BY 注文日;`,['日付でGROUP BY。']),
+exp('store',6,48,'select','商品区分ごとに単価の最小値と最大値を求める。',`SELECT 商品区分, MIN(単価) AS 最小額, MAX(単価) AS 最高額 FROM 商品 GROUP BY 商品区分;`,['区分単位でMIN/MAX。']),
+exp('store',6,49,'select','商品コードごとに、これまで注文された数量合計を商品コード順で求める。',`SELECT 商品コード, SUM(数量) AS 数量合計 FROM 注文 GROUP BY 商品コード ORDER BY 商品コード;`,['商品コードでGROUP BY。'],{ordered:true}),
+exp('store',6,50,'select','累計販売数量が多い商品を上位10件取得する。商品コードと販売数量を数量降順、同数なら商品コード降順にする。',`SELECT 商品コード, SUM(数量) AS 販売数量\nFROM 注文\nGROUP BY 商品コード\nORDER BY 販売数量 DESC, 商品コード DESC\nLIMIT 10;`,['SUM(数量)で順位付け。'],{ordered:true}),
+exp('store',6,51,'select','累計販売数量が5個未満の商品コードと数量を取得する。',`SELECT 商品コード, SUM(数量) AS 販売数量\nFROM 注文\nGROUP BY 商品コード\nHAVING SUM(数量) < 5;`,['集計値の条件はHAVING。']),
+exp('store',6,52,'select','クーポン割引をした注文件数と割引額合計を求める。ただしWHERE句は使わない。',`SELECT COUNT(クーポン割引料) AS 割引注文件数, SUM(クーポン割引料) AS 割引額合計 FROM 注文;`,['COUNT(列)はNULLを除外する。']),
+exp('store',6,53,'select','月ごとの注文件数を求める。「年月」は202401形式、「注文件数」を表示し、新しい月順にする。1注文には必ず枝番1があることを利用する。',`SELECT TO_CHAR(注文日,'YYYYMM') AS 年月, COUNT(*) AS 注文件数\nFROM 注文\nWHERE 注文枝番 = 1\nGROUP BY TO_CHAR(注文日,'YYYYMM')\nORDER BY 年月 DESC;`,['枝番1だけ数えると注文単位になる。'],{ordered:true}),
+exp('store',6,54,'select','Zで始まる商品コードのうち、累計販売数量100個以上の商品コードを取得する。',`SELECT 商品コード FROM 注文\nWHERE 商品コード LIKE 'Z%'\nGROUP BY 商品コード\nHAVING SUM(数量) >= 100;`,['前方一致で絞ってからグループ集計。']),
+
+exp('store',7,55,'select','商品S0604について、商品コード・商品名・単価・累計販売数量を取得する。SELECT句で注文テーブルを副問い合わせする。',`SELECT 商品コード, 商品名, 単価,\n (SELECT SUM(数量) FROM 注文 WHERE 商品コード='S0604') AS 累計販売数量\nFROM 商品 WHERE 商品コード='S0604';`,['SELECT句のスカラー副問い合わせ。']),
+exp('store',7,56,'update','2024-03-15・注文番号202403150014・枝番1の商品コードが誤っている。商品テーブルから「靴」「商品名にブーツ・雨・安心を含む」正しい商品を探し、SET句の副問い合わせで修正する。',`UPDATE 注文\nSET 商品コード = (\n  SELECT 商品コード FROM 商品\n  WHERE 商品区分='2' AND 商品名 LIKE '%ブーツ%' AND 商品名 LIKE '%雨%' AND 商品名 LIKE '%安心%'\n)\nWHERE 注文日='2024-03-15' AND 注文番号='202403150014' AND 注文枝番=1;`,['SET値を商品テーブルから1件取得する。']),
+exp('store',7,57,'select','商品名に「あったか」を含む商品が売れた日付と商品コードを過去の日付順に取得する。WHERE句でIN副問い合わせを使う。',`SELECT 注文日, 商品コード FROM 注文\nWHERE 商品コード IN (SELECT 商品コード FROM 商品 WHERE 商品名 LIKE '%あったか%')\nORDER BY 注文日 ASC;`,['IN副問い合わせで対象商品集合を作る。'],{ordered:true}),
+exp('store',7,58,'select','商品ごとの平均販売数量を求め、そのどの商品平均よりも多い数量が1回で売れた注文の商品コードと数量を取得する。ALL演算子を使う。',`SELECT 商品コード, 数量 FROM 注文\nWHERE 数量 > ALL (SELECT AVG(数量) FROM 注文 GROUP BY 商品コード);`,['ALLは副問い合わせが返す全値との比較。']),
+exp('store',7,59,'select','クーポン利用で売れたW0746について、割引による販売数と商品1個あたり平均割引額を取得する。平均は1円未満切り捨て。FROM句で副問い合わせを使う。',`SELECT SUM(x.数量) AS "割引による販売数",\n       FLOOR(SUM(x.クーポン割引料)::NUMERIC / SUM(x.数量)) AS 平均割引額\nFROM (SELECT 数量, クーポン割引料 FROM 注文 WHERE 商品コード='W0746' AND クーポン割引料 IS NOT NULL) x;`,['FROM句で必要行だけにしてから集計する。']),
+exp('store',7,60,'insert','既存注文へ明細を追加する。枝番は同じ注文番号の最大枝番+1を副問い合わせで求め、注文ごとに1つのINSERTを作る。\n2024-03-21 / 202403210080 / S1003 / 数量1 / 割引なし\n2024-03-22 / 202403220901 / A0052 / 数量2 / 割引500',`INSERT INTO 注文 VALUES ('2024-03-21','202403210080',\n (SELECT MAX(注文枝番)+1 FROM 注文 WHERE 注文番号='202403210080'), 'S1003',1,NULL);\n\nINSERT INTO 注文 VALUES ('2024-03-22','202403220901',\n (SELECT MAX(注文枝番)+1 FROM 注文 WHERE 注文番号='202403220901'), 'A0052',2,500);`,['枝番だけ副問い合わせで採番する。']),
+
+exp('store',8,61,'select','注文番号202401130115について、注文番号・枝番・商品コード・商品名・数量を、注文番号→枝番順に取得する。',`SELECT o.注文番号, o.注文枝番, o.商品コード, p.商品名, o.数量\nFROM 注文 o JOIN 商品 p ON p.商品コード=o.商品コード\nWHERE o.注文番号='202401130115'\nORDER BY o.注文番号, o.注文枝番;`,['商品名を商品テーブルから結合する。'],{ordered:true}),
+exp('store',8,62,'select','廃番商品A0009について、廃番日より後に注文された情報（注文日・注文番号・枝番・数量・注文金額）を取得する。注文金額=単価×数量。',`SELECT o.注文日, o.注文番号, o.注文枝番, o.数量, h.単価 * o.数量 AS 注文金額\nFROM 廃番商品 h JOIN 注文 o ON o.商品コード=h.商品コード\nWHERE h.商品コード='A0009' AND o.注文日 > h.廃番日;`,['廃番商品と注文を商品コードで結合する。']),
+exp('store',8,63,'select','商品S0604について、商品コード・商品名・単価と注文日・注文番号・数量・売上金額を注文日順に表示する。',`SELECT p.商品コード, p.商品名, p.単価, o.注文日, o.注文番号, o.数量, p.単価 * o.数量 AS 売上金額\nFROM 商品 p JOIN 注文 o ON o.商品コード=p.商品コード\nWHERE p.商品コード='S0604'\nORDER BY o.注文日;`,['単価×数量を計算列にする。'],{ordered:true}),
+exp('store',8,64,'select','2022年8月に注文された商品コードと商品名を取得する。既に廃番の商品は含めない。',`SELECT DISTINCT p.商品コード, p.商品名\nFROM 商品 p JOIN 注文 o ON o.商品コード=p.商品コード\nWHERE o.注文日 BETWEEN '2022-08-01' AND '2022-08-31';`,['現在の商品テーブルとのINNER JOINで廃番を除外。']),
+exp('store',8,65,'select','直前の検索を、廃番商品も漏れなく含むよう変更する。廃番商品の商品名は「廃番」と表示する。',`SELECT DISTINCT p.商品コード, p.商品名\nFROM 商品 p JOIN 注文 o ON o.商品コード=p.商品コード\nWHERE o.注文日 BETWEEN '2022-08-01' AND '2022-08-31'\nUNION\nSELECT DISTINCT h.商品コード, '廃番' AS 商品名\nFROM 廃番商品 h JOIN 注文 o ON o.商品コード=h.商品コード\nWHERE o.注文日 BETWEEN '2022-08-01' AND '2022-08-31';`,['現行と廃番をUNION。']),
+exp('store',8,66,'select','雑貨商品について、注文日・「商品コード:商品名」・数量を取得する。注文実績のない雑貨も表示し、数量は0にする。',`SELECT o.注文日, p.商品コード || ':' || p.商品名 AS 商品, COALESCE(o.数量,0) AS 数量\nFROM 商品 p LEFT JOIN 注文 o ON o.商品コード=p.商品コード\nWHERE p.商品区分='3';`,['商品を左側にLEFT JOINする。']),
+exp('store',8,67,'select','直前の検索に、注文当時は雑貨だったが現在は廃番の商品も含める。廃番商品は「商品コード:(廃番済み)」と表示する。',`SELECT o.注文日, p.商品コード || ':' || p.商品名 AS 商品, COALESCE(o.数量,0) AS 数量\nFROM 商品 p LEFT JOIN 注文 o ON o.商品コード=p.商品コード\nWHERE p.商品区分='3'\nUNION ALL\nSELECT o.注文日, h.商品コード || ':(廃番済み)' AS 商品, COALESCE(o.数量,0) AS 数量\nFROM 廃番商品 h LEFT JOIN 注文 o ON o.商品コード=h.商品コード\nWHERE h.商品区分='3';`,['現行商品と廃番商品をそれぞれLEFT JOINしてまとめる。']),
+exp('store',8,68,'select','注文番号202304030010について、注文日・注文番号・枝番・商品コード・商品名・単価・数量・注文金額を取得する。注文金額=単価×数量−クーポン割引料。廃番商品からも必要情報を補う。',`SELECT o.注文日, o.注文番号, o.注文枝番, o.商品コード,\n       COALESCE(p.商品名,h.商品名) AS 商品名, COALESCE(p.単価,h.単価) AS 単価, o.数量,\n       COALESCE(p.単価,h.単価) * o.数量 - COALESCE(o.クーポン割引料,0) AS 注文金額\nFROM 注文 o\nLEFT JOIN 商品 p ON p.商品コード=o.商品コード\nLEFT JOIN 廃番商品 h ON h.商品コード=o.商品コード\nWHERE o.注文番号='202304030010';`,['現行か廃番かをCOALESCEで吸収する。']),
+exp('store',8,69,'select','商品コードがBで始まる商品について、商品コード・商品名・単価・累計販売個数・総売上金額（割引は無視）を商品コード順に取得する。',`SELECT p.商品コード, p.商品名, p.単価, COALESCE(SUM(o.数量),0) AS 販売個数,\n       COALESCE(SUM(p.単価 * o.数量),0) AS 総売上金額\nFROM 商品 p LEFT JOIN 注文 o ON o.商品コード=p.商品コード\nWHERE p.商品コード LIKE 'B%'\nGROUP BY p.商品コード, p.商品名, p.単価\nORDER BY p.商品コード;`,['未販売商品も残すためLEFT JOIN。'],{ordered:true}),
+exp('store',8,70,'select','現在販売中の商品で関連商品が設定されているものについて、商品コード・商品名・関連商品コード・関連商品名を取得する。',`SELECT p.商品コード, p.商品名, p.関連商品コード, r.商品名 AS 関連商品名\nFROM 商品 p\nJOIN 商品 r ON r.商品コード=p.関連商品コード;`,['同じテーブルを別名で自己結合する。'])
+);
+
+const R = [];
+R.push(
+exp('rpg',2,1,'select','現在パーティーにいるキャラクターの全行について、ワイルドカードを使わず全列を取得する。',`SELECT ID, 名称, 職業コード, HP, MP, 状態コード FROM パーティー;`,['全列名を列挙する。']),
+exp('rpg',2,2,'select','名称・HP・MPを取得し、列見出しを「なまえ」「現在のHP」「現在のMP」にする。',`SELECT 名称 AS なまえ, HP AS "現在のHP", MP AS "現在のMP" FROM パーティー;`,['ASで列別名を付ける。']),
+exp('rpg',2,3,'select','イベントの全行について、ワイルドカードを使わず全列を取得する。',`SELECT イベント番号, イベント名称, タイプ, 前提イベント番号, 後続イベント番号 FROM イベント;`,['イベントの全列を明示する。']),
+exp('rpg',2,4,'select','イベント番号とイベント名称を取得し、見出しを「番号」「場面」にする。',`SELECT イベント番号 AS 番号, イベント名称 AS 場面 FROM イベント;`,['列別名を使う。']),
+exp('rpg',2,5,'insert','次の3キャラクターを1回のINSERTにつき1件ずつ追加する。\nA01 / スガワラ / 学者 / HP131 / MP232 / 沈黙\nA02 / オーエ / 戦士 / HP156 / MP84 / 異常なし\nA03 / イズミ / 魔法使い / HP84 / MP190 / 異常なし',`INSERT INTO パーティー VALUES ('A01','スガワラ','21',131,232,'03');\nINSERT INTO パーティー VALUES ('A02','オーエ','10',156,84,'00');\nINSERT INTO パーティー VALUES ('A03','イズミ','20',84,190,'00');`,['コード値をテーブル定義に合わせる。']),
+
+exp('rpg',3,6,'select','IDがC02のキャラクターを取得する。',`SELECT * FROM パーティー WHERE ID='C02';`,['IDで完全一致。']),
+exp('rpg',3,7,'update','ID A01のHPを120へ更新する。',`UPDATE パーティー SET HP=120 WHERE ID='A01';`,['対象IDをWHEREで限定する。'],{setupSql:`INSERT INTO パーティー VALUES ('A01','スガワラ','21',131,232,'03') ON CONFLICT (ID) DO NOTHING;`}),
+exp('rpg',3,8,'select','HPが100未満のキャラクターについてID・名称・HPを取得する。',`SELECT ID, 名称, HP FROM パーティー WHERE HP < 100;`,['未満は <。']),
+exp('rpg',3,9,'select','MPが100以上のキャラクターについてID・名称・MPを取得する。',`SELECT ID, 名称, MP FROM パーティー WHERE MP >= 100;`,['以上は >=。']),
+exp('rpg',3,10,'select','特殊タイプではないイベントについて、番号・名称・タイプを取得する。',`SELECT イベント番号, イベント名称, タイプ FROM イベント WHERE タイプ <> '3';`,['特殊=3。']),
+exp('rpg',3,11,'select','イベント番号5以下のイベント番号と名称を取得する。',`SELECT イベント番号, イベント名称 FROM イベント WHERE イベント番号 <= 5;`,['以下は <=。']),
+exp('rpg',3,12,'select','イベント番号20を超えるイベント番号と名称を取得する。',`SELECT イベント番号, イベント名称 FROM イベント WHERE イベント番号 > 20;`,['超えるは >。']),
+exp('rpg',3,13,'select','別イベントのクリアを前提としないイベント番号と名称を取得する。',`SELECT イベント番号, イベント名称 FROM イベント WHERE 前提イベント番号 IS NULL;`,['前提なしはNULL。']),
+exp('rpg',3,14,'select','次に発生するイベントが設定されている行について、イベント番号・名称・後続イベント番号を取得する。',`SELECT イベント番号, イベント名称, 後続イベント番号 FROM イベント WHERE 後続イベント番号 IS NOT NULL;`,['設定済みはIS NOT NULL。']),
+exp('rpg',3,15,'update','名称に「ミ」を含むキャラクターの状態コードを眠りへ更新する。',`UPDATE パーティー SET 状態コード='01' WHERE 名称 LIKE '%ミ%';`,['部分一致で対象を絞る。']),
+exp('rpg',3,16,'select','HPが120〜160のキャラクターについてID・名称・HPを、1つの条件式で取得する。',`SELECT ID, 名称, HP FROM パーティー WHERE HP BETWEEN 120 AND 160;`,['BETWEENを使う。']),
+exp('rpg',3,17,'select','職業が勇者・戦士・武道家のいずれかのキャラクターについて、名称と職業コードを1つの条件式で取得する。',`SELECT 名称, 職業コード FROM パーティー WHERE 職業コード IN ('01','10','11');`,['INで3コードを指定する。']),
+exp('rpg',3,18,'select','状態が「異常なし」「気絶」のどちらでもないキャラクターについて、名称と状態コードを1つの条件式で取得する。',`SELECT 名称, 状態コード FROM パーティー WHERE 状態コード NOT IN ('00','09');`,['NOT INで除外候補をまとめる。']),
+exp('rpg',3,19,'select','HPとMPがどちらも100を超えるキャラクターを取得する。',`SELECT * FROM パーティー WHERE HP > 100 AND MP > 100;`,['ANDで両方を満たす。']),
+exp('rpg',3,20,'select','IDがAで始まり、職業コードの2文字目が2のキャラクターを取得する。',`SELECT * FROM パーティー WHERE ID LIKE 'A%' AND 職業コード LIKE '_2';`,['LIKEの_は任意1文字。']),
+exp('rpg',3,21,'select','タイプが強制で、前提イベントと後続イベントの両方が設定済みのイベントを取得する。',`SELECT * FROM イベント\nWHERE タイプ='1' AND 前提イベント番号 IS NOT NULL AND 後続イベント番号 IS NOT NULL;`,['3条件をANDで結ぶ。']),
+exp('rpg',3,22,'design','パーティーとイベントの各テーブルで、主キーとなる列名を日本語で答える。',`パーティー: ID\nイベント: イベント番号`,['PRIMARY KEYを確認する。']),
+
+exp('rpg',4,23,'select','パーティーに現在存在する状態コードを重複なく取得する。',`SELECT DISTINCT 状態コード FROM パーティー;`,['DISTINCTで重複除去。']),
+exp('rpg',4,24,'select','IDと名称をID昇順で取得する。',`SELECT ID, 名称 FROM パーティー ORDER BY ID;`,['ORDER BY ID ASC。'],{ordered:true}),
+exp('rpg',4,25,'select','名称と職業コードを名称の降順で取得する。',`SELECT 名称, 職業コード FROM パーティー ORDER BY 名称 DESC;`,['DESCは降順。'],{ordered:true}),
+exp('rpg',4,26,'select','名称・HP・状態コードを、状態コード昇順、その中でHP降順に取得する。',`SELECT 名称, HP, 状態コード FROM パーティー ORDER BY 状態コード ASC, HP DESC;`,['複数キーのORDER BY。'],{ordered:true}),
+exp('rpg',4,27,'select','イベントのタイプ・番号・名称・前提番号・後続番号を、タイプ→イベント番号の昇順で取得する。ORDER BYは列番号を使う。',`SELECT タイプ, イベント番号, イベント名称, 前提イベント番号, 後続イベント番号\nFROM イベント\nORDER BY 1 ASC, 2 ASC;`,['SELECT列の位置番号を使う。'],{ordered:true}),
+exp('rpg',4,28,'select','HPが高いキャラクターを上位3件取得する。',`SELECT * FROM パーティー ORDER BY HP DESC LIMIT 3;`,['降順+LIMIT。'],{ordered:true}),
+exp('rpg',4,29,'select','MPが3番目に高いキャラクター1件を取得する。',`SELECT * FROM パーティー ORDER BY MP DESC LIMIT 1 OFFSET 2;`,['3件目なのでOFFSET 2。'],{ordered:true}),
+exp('rpg',4,30,'select','まだ参加していないイベント番号を昇順で取得する。',`SELECT イベント番号 FROM イベント\nEXCEPT\nSELECT イベント番号 FROM 経験イベント\nORDER BY イベント番号;`,['イベント全体−経験済み。'],{ordered:true}),
+exp('rpg',4,31,'select','既にクリア済みのイベントのうち、タイプがフリーのイベント番号を集合演算で取得する。',`SELECT イベント番号 FROM イベント WHERE タイプ='2'\nINTERSECT\nSELECT イベント番号 FROM 経験イベント WHERE クリア区分='1';`,['2集合の共通部分をINTERSECT。']),
+
+exp('rpg',5,32,'select','パーティーから「職業区分・職業コード・ID・名称」を職業コード順で取得する。職業コードが1で始まる=物理攻撃S、2で始まる=魔法攻撃M、それ以外=A。',`SELECT CASE WHEN 職業コード LIKE '1%' THEN 'S' WHEN 職業コード LIKE '2%' THEN 'M' ELSE 'A' END AS 職業区分,\n       職業コード, ID, 名称\nFROM パーティー\nORDER BY 職業コード;`,['CASEで先頭文字を分類する。'],{ordered:true}),
+exp('rpg',5,33,'select','武道家と学者がHP+50の装備を付けた場合の「なまえ・現在のHP・装備後のHP」を取得する。',`SELECT 名称 AS なまえ, HP AS "現在のHP", HP + 50 AS "装備後のHP"\nFROM パーティー\nWHERE 職業コード IN ('11','21');`,['計算列で装備後HPを求める。']),
+exp('rpg',5,34,'update','ID A01とA03のMPを20増やす。',`UPDATE パーティー SET MP = MP + 20 WHERE ID IN ('A01','A03');`,['現在値+20で更新。'],{setupSql:`INSERT INTO パーティー VALUES ('A01','スガワラ','21',131,232,'03'),('A03','イズミ','20',84,190,'00') ON CONFLICT (ID) DO NOTHING;`}),
+exp('rpg',5,35,'select','武道家の技で、自分のHPの2倍のダメージを与えるとする。武道家について「なまえ・現在のHP・予想されるダメージ」を取得する。',`SELECT 名称 AS なまえ, HP AS "現在のHP", HP * 2 AS "予想されるダメージ"\nFROM パーティー\nWHERE 職業コード='11';`,['単純な算術式をSELECT列にする。']),
+exp('rpg',5,36,'select','現在のパーティーについて「なまえ」「HPとMP」「ステータス」を取得する。HPとMPは「HP/MP」形式。状態コードは日本語へ変換し、異常なしは何も表示しない。',`SELECT 名称 AS なまえ, HP || '/' || MP AS "HPとMP",\n CASE 状態コード WHEN '00' THEN '' WHEN '01' THEN '眠り' WHEN '02' THEN '毒' WHEN '03' THEN '沈黙' WHEN '04' THEN '混乱' WHEN '09' THEN '気絶' ELSE '不明' END AS ステータス\nFROM パーティー;`,['CASEでコードを表示名に変える。']),
+exp('rpg',5,37,'select','イベント番号・名称・日本語タイプ・発生時期を取得する。発生時期は1〜10=序盤、11〜17=中盤、それ以外=終盤。',`SELECT イベント番号, イベント名称,\n CASE タイプ WHEN '1' THEN '強制' WHEN '2' THEN 'フリー' WHEN '3' THEN '特殊' END AS タイプ,\n CASE WHEN イベント番号 BETWEEN 1 AND 10 THEN '序盤' WHEN イベント番号 BETWEEN 11 AND 17 THEN '中盤' ELSE '終盤' END AS 発生時期\nFROM イベント;`,['CASEを2つ使って別々の表示値を作る。']),
+exp('rpg',5,38,'select','敵の攻撃ダメージがキャラクター名の文字数×10とする。「なまえ・現在のHP・予想ダメージ」を取得する。',`SELECT 名称 AS なまえ, HP AS "現在のHP", LENGTH(名称) * 10 AS "予想ダメージ" FROM パーティー;`,['LENGTHの結果を10倍する。']),
+exp('rpg',5,39,'update','HPまたはMPが4で割り切れるキャラクターは混乱したものとして、状態コードを更新する。余りの計算を使う。',`UPDATE パーティー SET 状態コード='04' WHERE MOD(HP,4)=0 OR MOD(MP,4)=0;`,['MOD(...,4)=0で4の倍数を判定する。']),
+exp('rpg',5,40,'select','売値777のアイテムを30%引きで購入した支払額を求める。端数は切り捨てる。',`SELECT FLOOR(777 * 0.7) AS 支払額;`,['30%引きは70%。']),
+exp('rpg',5,41,'update','全員について、HPとMPを現在値の30%分回復する。端数は四捨五入して更新する。',`UPDATE パーティー\nSET HP = ROUND(HP * 1.3), MP = ROUND(MP * 1.3);`,['30%回復 = 現在値×1.3。ROUNDで四捨五入。']),
+exp('rpg',5,42,'select','ある技は攻撃回数に応じて自分のHPをべき乗したダメージを与える。3回攻撃し、1回目を0乗から始める。「なまえ・HP・攻撃1回目・2回目・3回目」を取得する。',`SELECT 名称 AS なまえ, HP, POWER(HP,0) AS "攻撃1回目", POWER(HP,1) AS "攻撃2回目", POWER(HP,2) AS "攻撃3回目"\nFROM パーティー;`,['POWER(HP,指数)を0,1,2で使う。']),
+exp('rpg',5,43,'select','HPと状態コードからリスク値を算出する。HP<=50:+3、51〜100:+2、101〜150:+1、それ以外:+0。さらに状態コード値を加える。リスク降順→HP昇順。',`SELECT 名称 AS なまえ, HP, 状態コード,\n (CASE WHEN HP <= 50 THEN 3 WHEN HP <= 100 THEN 2 WHEN HP <= 150 THEN 1 ELSE 0 END + 状態コード::INTEGER) AS リスク値\nFROM パーティー\nORDER BY リスク値 DESC, HP ASC;`,['HP由来のCASE値と状態コードの整数値を加算する。'],{ordered:true}),
+exp('rpg',5,44,'select','イベントを番号順に「前提イベント番号・イベント番号・後続イベント番号」で取得する。前提/後続がない場合は「前提なし」「後続なし」。',`SELECT COALESCE(前提イベント番号::TEXT,'前提なし') AS 前提イベント番号,\n       イベント番号, COALESCE(後続イベント番号::TEXT,'後続なし') AS 後続イベント番号\nFROM イベント\nORDER BY イベント番号;`,['数値をTEXTへ変換してCOALESCE。'],{ordered:true}),
+
+exp('rpg',6,45,'select','パーティーのHPとMPそれぞれについて最大・最小・平均を求める。',`SELECT MAX(HP) AS HP最大, MIN(HP) AS HP最小, AVG(HP) AS HP平均, MAX(MP) AS MP最大, MIN(MP) AS MP最小, AVG(MP) AS MP平均 FROM パーティー;`,['HPとMPに集計関数を使う。']),
+exp('rpg',6,46,'select','イベントタイプ別の件数を、日本語タイプ名とともに取得する。',`SELECT CASE タイプ WHEN '1' THEN '強制' WHEN '2' THEN 'フリー' WHEN '3' THEN '特殊' END AS タイプ, COUNT(*) AS 件数\nFROM イベント\nGROUP BY タイプ;`,['GROUP BYは元のコード列で行う。']),
+exp('rpg',6,47,'select','経験イベントからクリア結果別の件数を求め、クリア結果順に表示する。',`SELECT クリア結果, COUNT(*) AS 件数 FROM 経験イベント WHERE クリア結果 IS NOT NULL GROUP BY クリア結果 ORDER BY クリア結果;`,['結果未登録は除外する。'],{ordered:true}),
+exp('rpg',6,48,'select','パーティー全員のMP合計により敵の行動を1件表示する。500未満=「敵は見とれている！」、500以上1000未満=「敵は呆然としている！」、1000以上=「敵はひれ伏している！」。',`SELECT CASE WHEN SUM(MP) < 500 THEN '敵は見とれている！' WHEN SUM(MP) < 1000 THEN '敵は呆然としている！' ELSE '敵はひれ伏している！' END AS 敵の行動\nFROM パーティー;`,['SUM(MP)をCASEで分岐。']),
+exp('rpg',6,49,'select','経験イベントから「クリアした」と「参加したがクリアしていない」のイベント数を2行形式で表示する。',`SELECT CASE クリア区分 WHEN '1' THEN 'クリアした' ELSE '参加したがクリアしていない' END AS 区分, COUNT(*) AS イベント数\nFROM 経験イベント\nGROUP BY クリア区分;`,['クリア区分を表示ラベルへ変換して集計。']),
+exp('rpg',6,50,'select','職業コードの1文字目を職業タイプとして、タイプごとにHPとMPの最大・最小・平均を求める。',`SELECT LEFT(職業コード,1) AS 職業タイプ, MAX(HP) AS HP最大, MIN(HP) AS HP最小, AVG(HP) AS HP平均, MAX(MP) AS MP最大, MIN(MP) AS MP最小, AVG(MP) AS MP平均\nFROM パーティー\nGROUP BY LEFT(職業コード,1);`,['LEFT(...,1)でグループキーを作る。']),
+exp('rpg',6,51,'select','IDの1文字目でパーティーを分類し、HP平均が100を超える分類について「ID分類・HP平均・MP平均」を取得する。',`SELECT LEFT(ID,1) AS ID分類, AVG(HP) AS HP平均, AVG(MP) AS MP平均\nFROM パーティー\nGROUP BY LEFT(ID,1)\nHAVING AVG(HP) > 100;`,['集計値条件はHAVING。']),
+exp('rpg',6,52,'select','HPに応じて開けられる扉の枚数が、100未満=1、100以上150未満=2、150以上200未満=3、200以上=5とする。現在のパーティー全員で開けられる扉の合計を求める。',`SELECT SUM(CASE WHEN HP < 100 THEN 1 WHEN HP < 150 THEN 2 WHEN HP < 200 THEN 3 ELSE 5 END) AS 扉の合計\nFROM パーティー;`,['行ごとのCASE結果をSUMする。']),
+
+exp('rpg',7,53,'select','勇者の現在HPがパーティー全員のHP合計の何%か求める。「なまえ・現在のHP・パーティーでの割合」を表示し、割合は小数第2位を四捨五入して小数第1位まで。',`SELECT 名称 AS なまえ, HP AS "現在のHP", ROUND(HP * 100.0 / (SELECT SUM(HP) FROM パーティー), 1) AS "パーティーでの割合"\nFROM パーティー WHERE 職業コード='01';`,['全体HPをスカラー副問い合わせで求める。']),
+exp('rpg',7,54,'update','魔法使いは、自分以外のパーティー全員のMP合計の10%を回復した。端数は四捨五入して魔法使いのMPだけ更新する。',`UPDATE パーティー p\nSET MP = MP + ROUND((SELECT SUM(MP) * 0.1 FROM パーティー WHERE ID <> p.ID))\nWHERE 職業コード='20';`,['相関副問い合わせで自分を除外する。']),
+exp('rpg',7,55,'select','これまでクリアしたイベントのうち、タイプが強制または特殊のものについて「イベント番号・クリア結果」を副問い合わせで取得する。',`SELECT イベント番号, クリア結果 FROM 経験イベント\nWHERE クリア区分='1' AND イベント番号 IN (SELECT イベント番号 FROM イベント WHERE タイプ IN ('1','3'));`,['イベント側で対象タイプ番号を作る。']),
+exp('rpg',7,56,'select','パーティー内で最もMPが高いキャラクター名とMPを副問い合わせで取得する。',`SELECT 名称, MP FROM パーティー WHERE MP = (SELECT MAX(MP) FROM パーティー);`,['最大値を副問い合わせで求める。']),
+exp('rpg',7,57,'select','まだ着手していないイベントについて、イベント番号と名称を番号順に副問い合わせで取得する。',`SELECT イベント番号, イベント名称 FROM イベント\nWHERE イベント番号 NOT IN (SELECT イベント番号 FROM 経験イベント)\nORDER BY イベント番号;`,['未経験番号をNOT INで除外。'],{ordered:true}),
+exp('rpg',7,58,'select','まだ着手していないイベント数を副問い合わせで求める。',`SELECT COUNT(*) AS 未着手イベント数 FROM イベント\nWHERE イベント番号 NOT IN (SELECT イベント番号 FROM 経験イベント);`,['未着手集合を数える。']),
+exp('rpg',7,59,'select','5番目にクリアしたイベントのイベント番号より小さい番号を持つ全イベントについて、番号と名称を取得する。',`SELECT イベント番号, イベント名称 FROM イベント\nWHERE イベント番号 < (\n  SELECT イベント番号 FROM 経験イベント\n  WHERE クリア区分='1'\n  ORDER BY ルート番号\n  LIMIT 1 OFFSET 4\n);`,['クリア順はルート番号で並べ、5件目を1行取得する。']),
+exp('rpg',7,60,'select','パーティーがクリア済みのイベントを前提としているイベントについて、イベント番号・名称・前提イベント番号を取得する。',`SELECT イベント番号, イベント名称, 前提イベント番号 FROM イベント\nWHERE 前提イベント番号 IN (SELECT イベント番号 FROM 経験イベント WHERE クリア区分='1');`,['クリア済み番号集合をINで使う。']),
+exp('rpg',7,61,'insert','イベント9を結果Bでクリアし、その次に発生するイベントへ参加した記録を経験イベントへ残す。更新と追加を2つのSQLで記述する。',`UPDATE 経験イベント SET クリア区分='1', クリア結果='B' WHERE イベント番号=9;\n\nINSERT INTO 経験イベント (イベント番号, クリア区分, クリア結果, ルート番号)\nSELECT 後続イベント番号, '0', NULL, (SELECT COALESCE(MAX(ルート番号),0)+1 FROM 経験イベント)\nFROM イベント WHERE イベント番号=9;`,['まず9を更新し、後続番号を副問い合わせで追加する。']),
+
+exp('rpg',8,62,'select','クリア済みイベントについて、ルート番号・イベント番号・イベント名称・クリア結果をクリア順に取得する。',`SELECT x.ルート番号, x.イベント番号, e.イベント名称, x.クリア結果\nFROM 経験イベント x JOIN イベント e ON e.イベント番号=x.イベント番号\nWHERE x.クリア区分='1'\nORDER BY x.ルート番号;`,['経験とイベントを番号で結合。'],{ordered:true}),
+exp('rpg',8,63,'select','強制タイプのイベントについて、イベント番号・名称・パーティーのクリア区分を取得する。未着手イベントはこの問題では省いてよい。',`SELECT e.イベント番号, e.イベント名称, x.クリア区分\nFROM イベント e JOIN 経験イベント x ON x.イベント番号=e.イベント番号\nWHERE e.タイプ='1';`,['未着手を省くのでINNER JOIN。']),
+exp('rpg',8,64,'select','直前の検索を、未着手の強制イベントも漏れなく取得するよう変更し、未着手はクリア区分に「未クリア」と表示する。',`SELECT e.イベント番号, e.イベント名称, COALESCE(x.クリア区分,'未クリア') AS クリア区分\nFROM イベント e LEFT JOIN 経験イベント x ON x.イベント番号=e.イベント番号\nWHERE e.タイプ='1';`,['イベントを左側にLEFT JOINする。']),
+exp('rpg',8,65,'select','コード表を使い、現在パーティーのID・なまえ・職業・状態を表示する。職業と状態は日本語名称にする。',`SELECT p.ID, p.名称 AS なまえ, j.コード名称 AS 職業, s.コード名称 AS 状態\nFROM パーティー p\nLEFT JOIN コード j ON j.コード種別=1 AND j.コード値=p.職業コード\nLEFT JOIN コード s ON s.コード種別=2 AND s.コード値=p.状態コード;`,['コード表を用途別に2回結合する。']),
+exp('rpg',8,66,'select','コード表の全職業を基準に、現在パーティーの「ID・なまえ・職業」を取得する。仲間に存在しない職業も表示し、なまえは「(仲間になっていない)」とする。',`SELECT p.ID, COALESCE(p.名称,'(仲間になっていない)') AS なまえ, c.コード名称 AS 職業\nFROM コード c LEFT JOIN パーティー p ON p.職業コード=c.コード値\nWHERE c.コード種別=1;`,['職業コード表を左側にする。']),
+exp('rpg',8,67,'select','経験イベントの参加済みイベントについて、イベント番号・クリア区分・クリア結果を表示する。クリア結果は「コード値:コード名称」。未クリアも含み、未使用のクリア結果コードも漏れなく考慮する。',`SELECT x.イベント番号, x.クリア区分,\n       CASE WHEN c.コード値 IS NULL THEN NULL ELSE TRIM(c.コード値) || ':' || c.コード名称 END AS クリア結果\nFROM 経験イベント x\nFULL OUTER JOIN コード c ON c.コード種別=4 AND c.コード値=x.クリア結果\nWHERE x.イベント番号 IS NOT NULL OR c.コード種別=4;`,['経験とクリア結果コードをFULL OUTER JOINする。']),
+exp('rpg',8,68,'select','前提イベントが設定されているイベントについて、イベント番号・イベント名称・前提イベント番号・前提イベント名称を取得する。',`SELECT e.イベント番号, e.イベント名称, e.前提イベント番号, p.イベント名称 AS 前提イベント名称\nFROM イベント e JOIN イベント p ON p.イベント番号=e.前提イベント番号;`,['イベント表を自己結合する。']),
+exp('rpg',8,69,'select','前提または後続が設定されているイベントについて、番号・名称・前提番号・前提名称・後続番号・後続名称を取得する。',`SELECT e.イベント番号, e.イベント名称, e.前提イベント番号, p.イベント名称 AS 前提イベント名称,\n       e.後続イベント番号, n.イベント名称 AS 後続イベント名称\nFROM イベント e\nLEFT JOIN イベント p ON p.イベント番号=e.前提イベント番号\nLEFT JOIN イベント n ON n.イベント番号=e.後続イベント番号\nWHERE e.前提イベント番号 IS NOT NULL OR e.後続イベント番号 IS NOT NULL;`,['同じイベント表を前提用・後続用に2回結合する。']),
+exp('rpg',8,70,'select','他イベントの前提となっているイベントについて、イベント番号・イベント名称・前提イベント数（そのイベントを前提としている件数）を番号順に取得する。',`SELECT p.イベント番号, p.イベント名称, COUNT(e.イベント番号) AS 前提イベント数\nFROM イベント p JOIN イベント e ON e.前提イベント番号=p.イベント番号\nGROUP BY p.イベント番号, p.イベント名称\nORDER BY p.イベント番号;`,['自己結合後に前提側でGROUP BYする。'],{ordered:true})
+);
+
+const N = [];
+N.push(
+exp('normalization',1,1,'design','会員ID・会員名・所属ジムID・ジム名を持つ第2正規形の「会員」を、第3正規形へ分解する。',`会員 = 会員ID + 会員名 + 所属ジムID(FK)\nジム = ジムID + ジム名`,['ジム名は所属ジムIDに従属するため別表へ。']),
+exp('normalization',1,2,'design','医療機関コード・医療機関名・系列会ID・系列会名を持つ表を第3正規形へ分解する。',`医療機関 = 医療機関コード + 医療機関名 + 系列会ID(FK)\n系列会 = 系列会ID + 系列会名`,['系列会名は系列会IDに従属する。']),
+exp('normalization',1,3,'design','アプリID・アプリ名・紹介文・開発者ID・開発者名を持つ表を第3正規形へ分解する。',`アプリ = アプリID + アプリ名 + 紹介文 + 開発者ID(FK)\n開発者 = 開発者ID + 開発者名`,['開発者名を開発者表へ分離。']),
+exp('normalization',1,4,'design','紙幣番号・額面・種別ID・種別名を持つ表を第3正規形へ分解する。属性順は変更しない。',`紙幣 = 紙幣番号 + 額面 + 種別ID(FK)\n紙幣種別 = 種別ID + 種別名`,['種別ID→種別名の推移的従属を分離。']),
+exp('normalization',1,5,'design','モデル管理ID・モデル種別ID/名・学習開始/終了日・データセットID/名を持つ機械学習モデル表を第3正規形へ分解する。必要なら3表以上にしてよい。',`機械学習モデル = モデル管理ID + モデル種別ID(FK) + 学習開始日 + 学習終了日 + 学習用データセットID(FK)\nモデル種別 = モデル種別ID + モデル種別名\n学習用データセット = 学習用データセットID + 学習用データセット名`,['独立したマスタ属性をそれぞれ分離する。']),
+
+exp('normalization',2,6,'design','支払年月+社員IDをキーとし、社員名・支払総額を持つ給与支払表を第2正規形へ分解する。',`社員 = 社員ID + 社員名\n給与支払 = 支払年月 + 社員ID(FK) + 支払総額\n主キー: 給与支払(支払年月, 社員ID)`,['社員名は複合主キーの一部「社員ID」にだけ依存する。']),
+exp('normalization',2,7,'design','上映作品ID+上映開始日時をキーとし、作品名・シアター番号を持つチケット表を第2正規形へ分解する。',`作品 = 上映作品ID + 作品名\n上映 = 上映作品ID(FK) + 上映開始日時 + シアター番号\n主キー: 上映(上映作品ID, 上映開始日時)`,['作品名は上映作品IDだけで決まる。']),
+exp('normalization',2,8,'design','DBMS製品名+導入バージョンをキーとし、最新バージョン・製造元を持つ導入DBMS表を第2正規形へ分解する。',`DBMS製品 = DBMS製品名 + 最新バージョン + 製造元\n導入DBMS = DBMS製品名(FK) + 導入バージョン\n主キー: 導入DBMS(DBMS製品名, 導入バージョン)`,['製品共通情報を複合キー表から切り離す。']),
+exp('normalization',2,9,'design','日付+国内定期運行便名をキーとし、発地空港コード・着地空港コード・離陸予定時刻を持つフライト表を第2正規形へ分解する。',`定期便 = 国内定期運行便名 + 発地空港コード + 着地空港コード\nフライト = 日付 + 国内定期運行便名(FK) + 離陸予定時刻\n主キー: フライト(日付, 国内定期運行便名)`,['路線情報は便名に依存し、実運行時刻は日付+便名に依存する。']),
+exp('normalization',2,10,'design','都道府県番号+市区町村番号をキーとし、都道府県名・市区町村名・知事名・市区町村長名を持つ自治体表を第2正規形へ分解する。',`都道府県 = 都道府県番号 + 都道府県名 + 知事名\n市区町村 = 都道府県番号(FK) + 市区町村番号 + 市区町村名 + 市区町村長名\n主キー: 市区町村(都道府県番号, 市区町村番号)`,['都道府県情報は複合主キーの都道府県番号だけに依存する。']),
+
+exp('normalization',3,11,'design','予約日時・担当医師名に対し、診察券番号+患者名が繰り返される外来予約データを第1正規形へ変換する。必要なら人工キーを導入する。',`外来予約 = 予約ID + 予約日時 + 担当医師名\n外来予約患者 = 予約ID(FK) + 診察券番号 + 患者名\n主キー例: 外来予約患者(予約ID, 診察券番号)`,['繰り返し患者を別行/別表へ分離する。']),
+exp('normalization',3,12,'design','宛先コード・郵便番号・住所に対し、宛名+敬称が繰り返される宛先データを第1正規形へ変換する。',`宛先 = 宛先コード + 郵便番号 + 住所\n宛名 = 宛先コード(FK) + 宛名 + 敬称\n主キー例: 宛名(宛先コード, 宛名)`,['繰り返し属性を別表へ。']),
+exp('normalization',3,13,'design','ダンジョンID・名称に対し、登場モンスターID+名称+最大HPが繰り返されるデータを第1正規形へ変換する。',`ダンジョン = ダンジョンID + ダンジョン名\nダンジョン登場モンスター = ダンジョンID(FK) + 登場モンスターID + 登場モンスター名 + 最大HP\n主キー: (ダンジョンID, 登場モンスターID)`,['第1正規形では繰り返し集合を行へ展開する。']),
+exp('normalization',3,14,'design','レジ番号+レシート連番・発行日に対し、商品番号+商品名+価格が繰り返されるレシートを第1正規形へ変換する。',`レシート = レジ番号 + レシート連番 + 発行日\nレシート明細 = レジ番号(FK) + レシート連番(FK) + 商品番号 + 商品名 + 価格\n主キー例: レシート明細(レジ番号, レシート連番, 商品番号)`,['ヘッダと繰り返し明細を分離する。']),
+exp('normalization',3,15,'design','契約番号・契約者ID/名・契約日に対し、プランと割引オプションがそれぞれ繰り返されるサブスク契約を第1正規形へ変換する。',`サブスク契約 = 契約番号 + 契約者ID + 契約者名 + 契約日\n契約プラン = 契約番号(FK) + プランID + プラン名 + 月額単価\n契約割引オプション = 契約番号(FK) + 割引オプションID + 割引オプション名`,['異なる繰り返し集合は別々の子表へ。']),
+exp('normalization',3,16,'design','レンズ型番・名称・焦点距離・F値に対し、対応カメラ型番/機種名と製造工場ID/工場名が繰り返される交換レンズデータを正規化する。1回で完了させなくてもよい。',`交換レンズ = レンズ型番 + レンズ名称 + 焦点距離 + F値\n対応カメラ = 対応カメラ型番 + 対応カメラ機種名\nレンズ対応カメラ = レンズ型番(FK) + 対応カメラ型番(FK)\n製造工場 = 製造工場ID + 工場名\nレンズ製造工場 = レンズ型番(FK) + 製造工場ID(FK)`,['多対多になり得る繰り返し関係を中間表へ分離する。'])
+);
+
+const D = [];
+D.push(
+exp('design',1,1,'design','小規模サロンの予約管理について、会員・予約・メニュー・担当者・料金ランクを中心に業務上の概念を整理し、ER図に必要な概念を挙げる。',`主要エンティティ例\n- 会員\n- 予約\n- 予約明細\n- メニュー\n- 担当者\n- 担当者ランク\n- メニュー料金\n\n主要関係\n会員 1:N 予約\n担当者 1:N 予約\n予約 N:M メニュー（予約明細で解消）\n担当者ランク 1:N 担当者\nメニュー N:M 担当者ランク（メニュー料金で解消）`,['予約で複数メニューを選べるため中間エンティティが必要。']),
+exp('design',1,2,'design','予約・会員・メニュー・担当者の4つのユーザービューから、重複を整理しながら第3正規形までのエンティティを導出する。',`会員(会員番号 PK, 氏名, 電話番号, メールアドレス, 入会日)\n担当者(担当者番号 PK, 氏名, 入社日, ランクコード FK)\nランク(ランクコード PK, 肩書)\nメニュー(メニューコード PK, メニュー名, 所要時間)\nメニュー料金(メニューコード PK/FK, ランクコード PK/FK, 料金)\n予約(予約番号 PK, 受付日時, 会員番号 FK, 初回区分, 予約日, 開始時刻, 所要時間, 担当者番号 FK, 合計金額, 備考)\n予約明細(予約番号 PK/FK, メニューコード PK/FK)`,['ランク別メニュー料金はメニューとランクの交差表にする。']),
+exp('design',1,3,'design','業務ルールとユーザービューから得たエンティティを統合し、主キー・外部キーを含む論理設計を完成させる。',`会員 1 --- N 予約 N --- 1 担当者\n予約 1 --- N 予約明細 N --- 1 メニュー\n担当者 N --- 1 ランク\nメニュー 1 --- N メニュー料金 N --- 1 ランク\n\n外部キー\n予約.会員番号 -> 会員.会員番号\n予約.担当者番号 -> 担当者.担当者番号\n予約明細.予約番号 -> 予約.予約番号\n予約明細.メニューコード -> メニュー.メニューコード\n担当者.ランクコード -> ランク.ランクコード\nメニュー料金.メニューコード -> メニュー.メニューコード\nメニュー料金.ランクコード -> ランク.ランクコード`,['多対多は中間表で解消する。']),
+exp('design',1,4,'design','論理設計を物理設計へ落とし込み、各エンティティのデータ型・長さ・NOT NULL・PK/FKを決める。',`例\nMember(MemberNo CHAR(4) PK, MemberName VARCHAR(20) NN, Tel CHAR(11), Mail VARCHAR(100), JoinDate DATE NN)\nStylist(StylistNo CHAR(2) PK, StylistName VARCHAR(20) NN, HireDate DATE NN, RankCD CHAR(1) FK)\nRank(RankCD CHAR(1) PK, Title VARCHAR(30))\nMenu(MenuCD CHAR(1) PK, MenuName VARCHAR(30) NN, Duration INTEGER NN)\nPrice(MenuCD CHAR(1) PK/FK, RankCD CHAR(1) PK/FK, MenuPrice INTEGER NN)\nReservation(ReserveNo INTEGER PK, RegistDate TIMESTAMP NN, MemberNo CHAR(4) FK, First BOOLEAN, ReserveDate DATE NN, StartTime TIME NN, ServiceTime INTEGER, StylistNo CHAR(2) FK, Amount INTEGER, Remarks VARCHAR(200))\nReserveDetail(ReserveNo INTEGER PK/FK, MenuCD CHAR(1) PK/FK)`,['物理名・型・制約を一貫させる。']),
+exp('design',1,5,'ddl','物理設計に従って予約管理用テーブルを作成するDDLを書く。',`CREATE TABLE Member (MemberNo CHAR(4) PRIMARY KEY, MemberName VARCHAR(20) NOT NULL, Tel CHAR(11), Mail VARCHAR(100), JoinDate DATE NOT NULL);\nCREATE TABLE Rank (RankCD CHAR(1) PRIMARY KEY, Title VARCHAR(30));\nCREATE TABLE Stylist (StylistNo CHAR(2) PRIMARY KEY, StylistName VARCHAR(20) NOT NULL, HireDate DATE NOT NULL, RankCD CHAR(1) REFERENCES Rank(RankCD));\nCREATE TABLE Menu (MenuCD CHAR(1) PRIMARY KEY, MenuName VARCHAR(30) NOT NULL, Duration INTEGER NOT NULL);\nCREATE TABLE Price (MenuCD CHAR(1) REFERENCES Menu(MenuCD), RankCD CHAR(1) REFERENCES Rank(RankCD), MenuPrice INTEGER NOT NULL, PRIMARY KEY(MenuCD,RankCD));\nCREATE TABLE Reservation (ReserveNo INTEGER PRIMARY KEY, RegistDate TIMESTAMP NOT NULL, MemberNo CHAR(4) REFERENCES Member(MemberNo), First BOOLEAN, ReserveDate DATE NOT NULL, StartTime TIME NOT NULL, ServiceTime INTEGER, StylistNo CHAR(2) REFERENCES Stylist(StylistNo), Amount INTEGER, Remarks VARCHAR(200));\nCREATE TABLE ReserveDetail (ReserveNo INTEGER REFERENCES Reservation(ReserveNo), MenuCD CHAR(1) REFERENCES Menu(MenuCD), PRIMARY KEY(ReserveNo,MenuCD));`,['参照先テーブルを先にCREATEする。']),
+exp('design',2,6,'insert','ユーザービューにある会員・担当者・メニュー・予約データを、外部キー制約に違反しない順序で登録するSQLを考える。',`登録順の例\n1. Rank\n2. Member\n3. Stylist\n4. Menu\n5. Price\n6. Reservation\n7. ReserveDetail\n\nINSERT INTO Rank ...;\nINSERT INTO Member ...;\nINSERT INTO Stylist ...;\nINSERT INTO Menu ...;\nINSERT INTO Price ...;\nINSERT INTO Reservation ...;\nINSERT INTO ReserveDetail ...;`,['親テーブル→子テーブルの順に登録する。']),
+exp('design',3,7,'select','勤務中の担当者について、氏名と肩書を取得する。肩書がない場合は「アシスタント」と表示する。',`SELECT s.StylistName, COALESCE(r.Title,'アシスタント') AS Title\nFROM Stylist s LEFT JOIN Rank r ON r.RankCD=s.RankCD;`,['肩書なしを残すLEFT JOIN+COALESCE。']),
+exp('design',3,8,'select','担当者ごとのメニュー料金を調べる。担当者名・メニュー名・料金を、ランク→担当者番号→メニュー名の順に並べる。',`SELECT s.StylistName, m.MenuName, p.MenuPrice\nFROM Stylist s\nJOIN Price p ON p.RankCD=s.RankCD\nJOIN Menu m ON m.MenuCD=p.MenuCD\nORDER BY s.RankCD, s.StylistNo, m.MenuName;`,['担当者ランクから料金表へ結合する。'],{ordered:true}),
+exp('design',3,9,'select','現在の予約について、予約番号・担当者名・メニュー名・各メニュー所要時間・各メニュー料金を取得する。',`SELECT r.ReserveNo, s.StylistName, m.MenuName, m.Duration, p.MenuPrice\nFROM Reservation r\nJOIN Stylist s ON s.StylistNo=r.StylistNo\nJOIN ReserveDetail d ON d.ReserveNo=r.ReserveNo\nJOIN Menu m ON m.MenuCD=d.MenuCD\nJOIN Price p ON p.MenuCD=m.MenuCD AND p.RankCD=s.RankCD;`,['料金はメニュー+担当者ランクの複合条件で結合。']),
+exp('design',3,10,'select','直前の検索を副問い合わせとして使い、予約ごとに予約番号・担当者名・全体の合計時間・合計金額を予約番号順で求める。',`SELECT x.ReserveNo, x.StylistName, SUM(x.Duration) AS TotalMinutes, SUM(x.MenuPrice) AS TotalAmount\nFROM (\n  SELECT r.ReserveNo, s.StylistName, m.Duration, p.MenuPrice\n  FROM Reservation r\n  JOIN Stylist s ON s.StylistNo=r.StylistNo\n  JOIN ReserveDetail d ON d.ReserveNo=r.ReserveNo\n  JOIN Menu m ON m.MenuCD=d.MenuCD\n  JOIN Price p ON p.MenuCD=m.MenuCD AND p.RankCD=s.RankCD\n) x\nGROUP BY x.ReserveNo, x.StylistName\nORDER BY x.ReserveNo;`,['明細を副問い合わせで作り、外側で予約単位に集計。'],{ordered:true}),
+exp('design',3,11,'insert','新規予約を自動コミットせず登録し、次の確認問題までコミットしない。',`BEGIN;\nINSERT INTO Reservation (ReserveNo,RegistDate,MemberNo,First,ReserveDate,StartTime,ServiceTime,StylistNo,Amount,Remarks)\nVALUES (4,'2024-10-01 10:03:00','0006',FALSE,'2024-10-01','11:30',90,'05',13400,NULL);\nINSERT INTO ReserveDetail VALUES (4,'C'),(4,'R');\n-- ここではCOMMITしない`,['BEGINでトランザクションを開始する。']),
+exp('design',3,12,'update','直前に登録した予約の所要時間と金額が正しいか確認し、誤りならトランザクションを取り消して正しい値で登録し直し、その後コミットする。',`-- 確認\nSELECT r.ReserveNo, SUM(m.Duration) AS 正しい所要時間, SUM(p.MenuPrice) AS 正しい金額\nFROM Reservation r\nJOIN Stylist s ON s.StylistNo=r.StylistNo\nJOIN ReserveDetail d ON d.ReserveNo=r.ReserveNo\nJOIN Menu m ON m.MenuCD=d.MenuCD\nJOIN Price p ON p.MenuCD=m.MenuCD AND p.RankCD=s.RankCD\nWHERE r.ReserveNo=4\nGROUP BY r.ReserveNo;\n\n-- 誤りなら ROLLBACK; の後に正値で再登録して COMMIT;`,['ROLLBACKとCOMMITの役割を確認する。']),
+exp('design',3,13,'select','担当者の予約状況として、予約日・担当者番号・担当者名・開始時刻・終了時刻を予約日→担当者番号順で取得する。終了時刻は開始時刻+所要分数。',`SELECT r.ReserveDate, s.StylistNo, s.StylistName, r.StartTime,\n       r.StartTime + CAST(r.ServiceTime || ' minutes' AS interval) AS EndTime\nFROM Reservation r JOIN Stylist s ON s.StylistNo=r.StylistNo\nORDER BY r.ReserveDate, s.StylistNo;`,['TIME + INTERVALで終了時刻を計算。'],{ordered:true}),
+exp('design',3,14,'select','直前の検索を変更し、開始時刻は「時」の部分だけを整数として表示する。',`SELECT r.ReserveDate, s.StylistNo, s.StylistName, EXTRACT(hour FROM r.StartTime)::INTEGER AS StartHour,\n       r.StartTime + CAST(r.ServiceTime || ' minutes' AS interval) AS EndTime\nFROM Reservation r JOIN Stylist s ON s.StylistNo=r.StylistNo\nORDER BY r.ReserveDate, s.StylistNo;`,['EXTRACT(hour FROM TIME)を使う。'],{ordered:true}),
+exp('design',3,15,'select','予約日×担当者のスケジュール表を作る。10〜18時を列にし、該当時刻に予約があれば終了時刻、なければ空欄。予約のない担当者も最後に表示する。',`SELECT d.ReserveDate, s.StylistName,\n MAX(CASE WHEN EXTRACT(hour FROM d.StartTime)=10 THEN d.EndTime::TEXT END) AS "10時台",\n MAX(CASE WHEN EXTRACT(hour FROM d.StartTime)=11 THEN d.EndTime::TEXT END) AS "11時台",\n MAX(CASE WHEN EXTRACT(hour FROM d.StartTime)=12 THEN d.EndTime::TEXT END) AS "12時台",\n MAX(CASE WHEN EXTRACT(hour FROM d.StartTime)=13 THEN d.EndTime::TEXT END) AS "13時台",\n MAX(CASE WHEN EXTRACT(hour FROM d.StartTime)=14 THEN d.EndTime::TEXT END) AS "14時台",\n MAX(CASE WHEN EXTRACT(hour FROM d.StartTime)=15 THEN d.EndTime::TEXT END) AS "15時台",\n MAX(CASE WHEN EXTRACT(hour FROM d.StartTime)=16 THEN d.EndTime::TEXT END) AS "16時台",\n MAX(CASE WHEN EXTRACT(hour FROM d.StartTime)=17 THEN d.EndTime::TEXT END) AS "17時台",\n MAX(CASE WHEN EXTRACT(hour FROM d.StartTime)=18 THEN d.EndTime::TEXT END) AS "18時台"\nFROM Stylist s\nLEFT JOIN (\n SELECT ReserveDate, StylistNo, StartTime, StartTime + CAST(ServiceTime || ' minutes' AS interval) AS EndTime\n FROM Reservation\n) d ON d.StylistNo=s.StylistNo\nGROUP BY d.ReserveDate, s.StylistNo, s.StylistName\nORDER BY d.ReserveDate NULLS LAST, s.StylistNo;`,['CASE集計で横持ち表へ変換する。']),
+exp('design',3,16,'select','同一担当者が同じ日に複数予約を持つ場合も1行にまとめたスケジュール表へ改良する。各時間帯に複数終了時刻があれば1セルへ集約する。',`SELECT d.ReserveDate, s.StylistName,\n STRING_AGG(CASE WHEN EXTRACT(hour FROM d.StartTime)=10 THEN d.EndTime::TEXT END, ', ' ORDER BY d.StartTime) AS "10時台",\n STRING_AGG(CASE WHEN EXTRACT(hour FROM d.StartTime)=11 THEN d.EndTime::TEXT END, ', ' ORDER BY d.StartTime) AS "11時台",\n STRING_AGG(CASE WHEN EXTRACT(hour FROM d.StartTime)=12 THEN d.EndTime::TEXT END, ', ' ORDER BY d.StartTime) AS "12時台",\n STRING_AGG(CASE WHEN EXTRACT(hour FROM d.StartTime)=13 THEN d.EndTime::TEXT END, ', ' ORDER BY d.StartTime) AS "13時台",\n STRING_AGG(CASE WHEN EXTRACT(hour FROM d.StartTime)=14 THEN d.EndTime::TEXT END, ', ' ORDER BY d.StartTime) AS "14時台",\n STRING_AGG(CASE WHEN EXTRACT(hour FROM d.StartTime)=15 THEN d.EndTime::TEXT END, ', ' ORDER BY d.StartTime) AS "15時台",\n STRING_AGG(CASE WHEN EXTRACT(hour FROM d.StartTime)=16 THEN d.EndTime::TEXT END, ', ' ORDER BY d.StartTime) AS "16時台",\n STRING_AGG(CASE WHEN EXTRACT(hour FROM d.StartTime)=17 THEN d.EndTime::TEXT END, ', ' ORDER BY d.StartTime) AS "17時台",\n STRING_AGG(CASE WHEN EXTRACT(hour FROM d.StartTime)=18 THEN d.EndTime::TEXT END, ', ' ORDER BY d.StartTime) AS "18時台"\nFROM Stylist s\nLEFT JOIN (SELECT ReserveDate, StylistNo, StartTime, StartTime + CAST(ServiceTime || ' minutes' AS interval) AS EndTime FROM Reservation) d ON d.StylistNo=s.StylistNo\nGROUP BY d.ReserveDate, s.StylistNo, s.StylistName\nORDER BY d.ReserveDate NULLS LAST, s.StylistNo;`,['STRING_AGGで同じ時間帯の複数予約を1セルへ集約する。'])
+);
+
+export const EXERCISES = [...B, ...S, ...R, ...N, ...D];
+
+export const EXERCISES_BY_DATASET = Object.groupBy
+  ? Object.groupBy(EXERCISES, x => x.datasetId)
+  : EXERCISES.reduce((acc, item) => ((acc[item.datasetId] ||= []).push(item), acc), {});
+
+export function getChapters(datasetId) {
+  const rows = EXERCISES_BY_DATASET[datasetId] || [];
+  const seen = new Map();
+  for (const row of rows) seen.set(row.chapter, row.chapterName);
+  return [...seen.entries()].sort((a,b) => a[0]-b[0]).map(([number,name]) => ({number,name}));
+}
