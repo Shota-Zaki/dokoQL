@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0f766e">
+  <meta name="description" content="ブラウザだけでSQLを実行しながら学べる自己学習用ワークベンチ">
+  <title>SQL Practice Lab</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <div id="app" class="app-shell">
+    <header class="topbar">
+      <div class="brand-block">
+        <div class="brand-mark">SQL</div>
+        <div>
+          <h1>SQL Practice Lab</h1>
+          <p>問題・SQL実行・DB確認を1画面で</p>
+        </div>
+      </div>
+      <div class="topbar-actions">
+        <label class="field compact-field">
+          <span>題材</span>
+          <select id="datasetSelect" aria-label="題材を選択"></select>
+        </label>
+        <div class="progress-chip" aria-live="polite">
+          <span id="progressText">0 / 0</span>
+          <span class="progress-label">正解</span>
+        </div>
+      </div>
+    </header>
+
+    <nav class="mobile-tabs" aria-label="モバイル表示切替">
+      <button type="button" data-mobile-view="problem" class="active">問題</button>
+      <button type="button" data-mobile-view="editor">SQL</button>
+      <button type="button" data-mobile-view="database">DB</button>
+      <button type="button" data-mobile-view="result">結果</button>
+    </nav>
+
+    <main class="workspace" data-mobile-active="problem">
+      <aside class="panel nav-panel" data-mobile-panel="problem">
+        <div class="panel-heading">
+          <div>
+            <span class="eyebrow">EXERCISES</span>
+            <h2>問題一覧</h2>
+          </div>
+          <button id="filterToggle" class="icon-button" type="button" aria-label="絞り込み">⌕</button>
+        </div>
+
+        <div id="filterArea" class="filter-area">
+          <label class="field">
+            <span>Chapter</span>
+            <select id="chapterSelect"></select>
+          </label>
+          <label class="field">
+            <span>状態</span>
+            <select id="statusSelect">
+              <option value="all">すべて</option>
+              <option value="unanswered">未回答</option>
+              <option value="correct">正解</option>
+              <option value="incorrect">要復習</option>
+              <option value="review">見直し</option>
+            </select>
+          </label>
+        </div>
+
+        <div id="exerciseList" class="exercise-list" role="list"></div>
+      </aside>
+
+      <section class="main-column" data-mobile-panel="editor">
+        <article class="panel problem-card" data-mobile-panel="problem">
+          <div class="problem-meta">
+            <div>
+              <span id="problemChapter" class="eyebrow">CHAPTER</span>
+              <h2 id="problemTitle">問題を選択してください</h2>
+            </div>
+            <div class="problem-actions">
+              <span id="problemType" class="type-badge">SELECT</span>
+              <button id="reviewButton" class="secondary-button" type="button">☆ 見直し</button>
+            </div>
+          </div>
+          <p id="problemPrompt" class="problem-prompt"></p>
+          <div id="hintArea" class="hint-area hidden"></div>
+          <div id="sourceNote" class="source-note">公開リポジトリ向けに、学習目的と条件を保った表現へ再構成しています。</div>
+        </article>
+
+        <section class="panel editor-card">
+          <div class="panel-heading editor-heading">
+            <div>
+              <span class="eyebrow">SQL EDITOR</span>
+              <h2>SQLを書く</h2>
+            </div>
+            <div id="dbStatus" class="db-status"><span class="status-dot"></span>DB準備中</div>
+          </div>
+          <textarea id="sqlEditor" class="sql-editor" spellcheck="false" autocomplete="off" aria-label="SQL入力欄" placeholder="SELECT ...;"></textarea>
+          <div class="editor-toolbar">
+            <div class="toolbar-left">
+              <button id="runButton" class="primary-button" type="button">▶ 実行</button>
+              <button id="judgeButton" class="success-button" type="button">✓ 判定</button>
+              <button id="resetButton" class="secondary-button" type="button">↻ DB初期化</button>
+            </div>
+            <div class="toolbar-right">
+              <button id="hintButton" class="text-button" type="button">ヒント</button>
+              <button id="answerButton" class="text-button" type="button">解答例</button>
+            </div>
+          </div>
+          <div class="keyboard-hint">Ctrl / ⌘ + Enter で実行</div>
+        </section>
+
+        <section class="panel result-card" data-mobile-panel="result">
+          <div class="panel-heading">
+            <div>
+              <span class="eyebrow">RESULT</span>
+              <h2>実行結果</h2>
+            </div>
+            <div id="resultSummary" class="result-summary">未実行</div>
+          </div>
+          <div id="judgeMessage" class="judge-message hidden" aria-live="polite"></div>
+          <div id="resultArea" class="result-area empty-state">SQLを実行すると、ここに結果が表示されます。</div>
+        </section>
+      </section>
+
+      <aside class="panel db-panel" data-mobile-panel="database">
+        <div class="panel-heading">
+          <div>
+            <span class="eyebrow">DATABASE</span>
+            <h2>テーブル</h2>
+          </div>
+          <button id="refreshDbButton" class="icon-button" type="button" aria-label="DB表示を更新">↻</button>
+        </div>
+        <div id="tableTabs" class="table-tabs"></div>
+        <div class="db-subtabs" role="tablist">
+          <button type="button" data-db-view="data" class="active">データ</button>
+          <button type="button" data-db-view="schema">定義</button>
+        </div>
+        <div id="dbInspector" class="db-inspector empty-state">DBを準備しています。</div>
+        <details class="dataset-note">
+          <summary>初期データについて</summary>
+          <p>公開用途のため、設問条件を満たす学習用データとして再構成しています。外部サービスの非公開データは取り込んでいません。</p>
+        </details>
+      </aside>
+    </main>
+
+    <dialog id="answerDialog" class="answer-dialog">
+      <form method="dialog" class="dialog-shell">
+        <div class="dialog-heading">
+          <div>
+            <span class="eyebrow">ANSWER EXAMPLE</span>
+            <h2>解答例と考え方</h2>
+          </div>
+          <button class="icon-button" value="cancel" aria-label="閉じる">×</button>
+        </div>
+        <pre id="answerSql" class="answer-code"></pre>
+        <div id="answerExplanation" class="answer-explanation"></div>
+        <div class="dialog-actions">
+          <button id="copyAnswerButton" type="button" class="secondary-button">SQLをコピー</button>
+          <button value="cancel" class="primary-button">閉じる</button>
+        </div>
+      </form>
+    </dialog>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  </div>
+  <script type="module" src="./boot.js"></script>
+</body>
+</html>
