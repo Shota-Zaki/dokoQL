@@ -40,10 +40,12 @@ jobs:
           test -f docs/hintEnhancer.js
           test -f docs/sqlInputPalette.js
           test -f docs/sqlInputPalette.css
+          test -f docs/retryEnhancer.js
           test -f docs/content/data-8.js
           grep -q "tableGuideEnhancer.js" docs/boot.js
           grep -q "hintEnhancer.js" docs/boot.js
           grep -q "sqlInputPalette.js" docs/boot.js
+          grep -q "retryEnhancer.js" docs/boot.js
 
   deploy:
     if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
