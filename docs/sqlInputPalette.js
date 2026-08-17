@@ -5,6 +5,7 @@ const editor = document.getElementById('sqlEditor');
 const datasetSelect = document.getElementById('datasetSelect');
 const exerciseList = document.getElementById('exerciseList');
 const problemTitle = document.getElementById('problemTitle');
+const COLLAPSE_KEY = 'sql-input-palette-collapsed-v1';
 
 if (editor) {
   const css = document.createElement('link');
@@ -19,13 +20,36 @@ if (editor) {
 
   let selectedTable = '';
   let qualifiedColumns = false;
+  let collapsed = loadCollapsedState();
 
   const keywordGroups = [
-    { label: '基本', tokens: ['SELECT', 'FROM', 'WHERE', 'INSERT INTO', 'VALUES', 'UPDATE', 'SET', 'DELETE FROM', 'ORDER BY', 'ASC', 'DESC', 'AS'] },
-    { label: '条件', tokens: ['AND', 'OR', 'NOT', 'LIKE', 'IN', 'BETWEEN', 'IS NULL', 'IS NOT NULL', 'DISTINCT'] },
-    { label: '集計・結合', tokens: ['GROUP BY', 'HAVING', 'JOIN', 'LEFT JOIN', 'RIGHT JOIN', 'FULL JOIN', 'ON', 'LIMIT', 'OFFSET', 'UNION', 'UNION ALL', 'EXCEPT', 'INTERSECT'] },
-    { label: '関数・記号', tokens: ['COUNT()', 'SUM()', 'AVG()', 'MAX()', 'MIN()', 'COALESCE()', 'CASE', 'WHEN', 'THEN', 'ELSE', 'END', '*', ',', '=', '<>', '>', '<', '>=', '<=', '(', ')', ';'] },
+    {
+      label: '基本',
+      tokens: ['SELECT', 'FROM', 'WHERE', 'INSERT INTO', 'VALUES', 'UPDATE', 'SET', 'DELETE FROM', 'ORDER BY', 'ASC', 'DESC', 'AS'],
+    },
+    {
+      label: '条件',
+      tokens: ['AND', 'OR', 'NOT', 'LIKE', 'IN', 'BETWEEN', 'IS NULL', 'IS NOT NULL', 'DISTINCT'],
+    },
+    {
+      label: '集計・結合',
+      tokens: ['GROUP BY', 'HAVING', 'JOIN', 'LEFT JOIN', 'RIGHT JOIN', 'FULL JOIN', 'ON', 'LIMIT', 'OFFSET', 'UNION', 'UNION ALL', 'EXCEPT', 'INTERSECT'],
+    },
+    {
+      label: '関数・記号',
+      tokens: ['COUNT()', 'SUM()', 'AVG()', 'MAX()', 'MIN()', 'COALESCE()', 'CASE', 'WHEN', 'THEN', 'ELSE', 'END', '*', ',', '=', '<>', '>', '<', '>=', '<=', '(', ')', ';'],
+    },
   ];
+
+  function loadCollapsedState() {
+    try { return localStorage.getItem(COLLAPSE_KEY) === '1'; }
+    catch { return false; }
+  }
+
+  function saveCollapsedState() {
+    try { localStorage.setItem(COLLAPSE_KEY, collapsed ? '1' : '0'); }
+    catch { /* local storage may be unavailable */ }
+  }
 
   function activeExercise() {
     const active = document.querySelector('.exercise-item.active[data-exercise-id]');
@@ -58,7 +82,10 @@ if (editor) {
       if (ch === "'" || ch === '"') { quote = ch; continue; }
       if (ch === '(') depth += 1;
       else if (ch === ')') depth = Math.max(0, depth - 1);
-      else if (ch === ',' && depth === 0) { parts.push(value.slice(start, i)); start = i + 1; }
+      else if (ch === ',' && depth === 0) {
+        parts.push(value.slice(start, i));
+        start = i + 1;
+      }
     }
     parts.push(value.slice(start));
     return parts;
@@ -77,12 +104,18 @@ if (editor) {
       for (let i = open + 1; i < sql.length; i += 1) {
         const ch = sql[i];
         if (quote) {
-          if (ch === quote) { if (sql[i + 1] === quote) i += 1; else quote = null; }
+          if (ch === quote) {
+            if (sql[i + 1] === quote) i += 1;
+            else quote = null;
+          }
           continue;
         }
         if (ch === "'" || ch === '"') { quote = ch; continue; }
         if (ch === '(') depth += 1;
-        else if (ch === ')') { depth -= 1; if (depth === 0) { close = i; break; } }
+        else if (ch === ')') {
+          depth -= 1;
+          if (depth === 0) { close = i; break; }
+        }
       }
       if (close < 0) continue;
       const columns = [];
@@ -120,7 +153,9 @@ if (editor) {
     for (const exercise of EXERCISES_BY_DATASET[datasetId] || []) {
       const sql = exercise.referenceAnswerSql || exercise.answerSql || '';
       parseCreateTables(sql, catalog);
-      for (const table of referencedTables(sql)) if (!catalog.has(table)) catalog.set(table, { name: table, columns: [] });
+      for (const table of referencedTables(sql)) {
+        if (!catalog.has(table)) catalog.set(table, { name: table, columns: [] });
+      }
     }
     return catalog;
   }
@@ -141,9 +176,11 @@ if (editor) {
     const after = editor.value.slice(end);
     const punctuationOnly = /^[,;()=*<>]+$/.test(token);
     let text = token;
+
     if (!punctuationOnly && before && !/[\s(.,]$/.test(before)) text = ` ${text}`;
     if (!punctuationOnly && needsSpacing(token) && after && !/^[\s),.;]/.test(after)) text = `${text} `;
     if (!punctuationOnly && !after && !token.endsWith('()')) text = `${text} `;
+
     editor.setRangeText(text, start, end, 'end');
     let caret = start + text.length;
     if (functionCursor) {
@@ -178,36 +215,83 @@ if (editor) {
     return wrapper;
   }
 
+  function renderHeader() {
+    const header = document.createElement('div');
+    header.className = 'sql-palette-header';
+
+    const heading = document.createElement('div');
+    heading.className = 'sql-palette-heading';
+    heading.innerHTML = '<strong>クリック入力</strong><span>SQL文・テーブル・カラムを選ぶとカーソル位置へ入ります</span>';
+    header.append(heading);
+
+    const actions = document.createElement('div');
+    actions.className = 'sql-palette-header-actions';
+
+    if (!collapsed) {
+      const qualify = document.createElement('label');
+      qualify.className = 'sql-palette-qualify';
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.checked = qualifiedColumns;
+      checkbox.addEventListener('change', () => { qualifiedColumns = checkbox.checked; render(); });
+      qualify.append(checkbox, document.createTextNode(' テーブル名付きカラム'));
+      actions.append(qualify);
+    }
+
+    const collapseButton = document.createElement('button');
+    collapseButton.type = 'button';
+    collapseButton.className = 'sql-palette-collapse';
+    collapseButton.textContent = collapsed ? '展開' : '最小化';
+    collapseButton.setAttribute('aria-expanded', String(!collapsed));
+    collapseButton.title = collapsed ? 'クリック入力を展開' : 'クリック入力を最小化';
+    collapseButton.addEventListener('click', () => {
+      collapsed = !collapsed;
+      saveCollapsedState();
+      render();
+    });
+    actions.append(collapseButton);
+
+    header.append(actions);
+    return header;
+  }
+
   function render() {
     const datasetId = datasetSelect?.value || 'bank';
     const exercise = activeExercise();
-    if (exercise?.type === 'design') { palette.classList.add('hidden'); return; }
+    if (exercise?.type === 'design') {
+      palette.classList.add('hidden');
+      return;
+    }
     palette.classList.remove('hidden');
+    palette.classList.toggle('is-collapsed', collapsed);
+    palette.replaceChildren(renderHeader());
+
+    if (collapsed) return;
+
     const catalog = buildCatalog(datasetId);
     const recommended = problemTables(exercise).filter(name => catalog.has(name));
     const allTables = [...catalog.keys()];
     const orderedTables = [...recommended, ...allTables.filter(name => !recommended.includes(name))];
     if (!catalog.has(selectedTable)) selectedTable = recommended[0] || orderedTables[0] || '';
-    palette.replaceChildren();
-
-    const header = document.createElement('div');
-    header.className = 'sql-palette-header';
-    header.innerHTML = '<div><strong>クリック入力</strong><span>SQL文・テーブル・カラムを選ぶとカーソル位置へ入ります</span></div>';
-    const qualify = document.createElement('label');
-    qualify.className = 'sql-palette-qualify';
-    const checkbox = document.createElement('input');
-    checkbox.type = 'checkbox';
-    checkbox.checked = qualifiedColumns;
-    checkbox.addEventListener('change', () => { qualifiedColumns = checkbox.checked; render(); });
-    qualify.append(checkbox, document.createTextNode(' テーブル名付きカラム'));
-    header.append(qualify);
-    palette.append(header);
 
     for (const group of keywordGroups) {
-      palette.append(row(group.label, group.tokens.map(token => chip(token, 'keyword-chip', () => insertToken(token, { functionCursor: token.endsWith('()') })) )));
+      palette.append(row(group.label, group.tokens.map(token => chip(
+        token,
+        'keyword-chip',
+        () => insertToken(token, { functionCursor: token.endsWith('()') }),
+      ))));
     }
 
-    const tableButtons = orderedTables.map(name => chip(name, `${recommended.includes(name) ? 'recommended-table ' : ''}${selectedTable === name ? 'selected-table' : ''}`, () => { selectedTable = name; insertToken(name); render(); }, recommended.includes(name) ? 'この問題で使用するテーブル' : 'テーブル名を挿入'));
+    const tableButtons = orderedTables.map(name => chip(
+      name,
+      `${recommended.includes(name) ? 'recommended-table ' : ''}${selectedTable === name ? 'selected-table' : ''}`,
+      () => {
+        selectedTable = name;
+        insertToken(name);
+        render();
+      },
+      recommended.includes(name) ? 'この問題で使用するテーブル' : 'テーブル名を挿入',
+    ));
     palette.append(row('テーブル', tableButtons.length ? tableButtons : [document.createTextNode('利用可能なテーブルはありません')]));
 
     const columns = catalog.get(selectedTable)?.columns || [];
@@ -215,7 +299,8 @@ if (editor) {
       const text = qualifiedColumns && selectedTable ? `${selectedTable}.${name}` : name;
       return chip(text, 'column-chip', () => insertToken(text), `${selectedTable} のカラム`);
     });
-    palette.append(row(selectedTable ? `カラム｜${selectedTable}` : 'カラム', columnButtons.length ? columnButtons : [document.createTextNode('カラム情報はありません')]));
+    const columnLabel = selectedTable ? `カラム｜${selectedTable}` : 'カラム';
+    palette.append(row(columnLabel, columnButtons.length ? columnButtons : [document.createTextNode('カラム情報はありません')]));
   }
 
   const scheduleRender = () => setTimeout(render, 0);
