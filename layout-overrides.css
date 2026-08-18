@@ -1,0 +1,111 @@
+/* Workbench layout: exercises on top, problem + database wide, editor + result compact. */
+
+@media (min-width: 768px) {
+  .workspace {
+    grid-template-columns: minmax(0, 1fr) minmax(340px, 400px);
+    gap: 12px;
+    align-items: start;
+  }
+
+  .nav-panel {
+    grid-column: 1 / -1;
+    position: static;
+    top: auto;
+    max-height: none;
+    overflow: hidden;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(300px, 420px);
+    gap: 10px 16px;
+    align-items: end;
+    padding: 12px 14px;
+  }
+
+  .nav-panel .panel-heading {
+    grid-column: 1;
+  }
+
+  .nav-panel .filter-area {
+    grid-column: 2;
+    margin: 0;
+  }
+
+  .nav-panel .exercise-list {
+    grid-column: 1 / -1;
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 2px 2px 8px;
+    scroll-snap-type: x proximity;
+    scrollbar-gutter: stable;
+  }
+
+  .nav-panel .exercise-item {
+    flex: 0 0 clamp(180px, 16vw, 230px);
+    min-width: 0;
+    scroll-snap-align: start;
+  }
+
+  .database-column {
+    grid-column: 1;
+    min-width: 0;
+    display: grid;
+    gap: 12px;
+    align-content: start;
+  }
+
+  .main-column {
+    grid-column: 2;
+    min-width: 0;
+    display: grid;
+    gap: 12px;
+    align-content: start;
+  }
+
+  .db-panel {
+    position: static;
+    right: auto;
+    top: auto;
+    bottom: auto;
+    width: auto;
+    max-height: none;
+    min-height: 560px;
+    overflow: visible;
+    transform: none;
+    transition: none;
+  }
+
+  .db-inspector {
+    min-height: 420px;
+    height: clamp(420px, 56vh, 720px);
+    max-height: none;
+    overflow: auto;
+    align-content: start;
+  }
+
+  .db-panel .data-table {
+    font-size: 13px;
+  }
+
+  .sql-editor {
+    min-height: 300px;
+  }
+
+  .result-card {
+    min-height: 280px;
+  }
+
+  .result-area {
+    max-height: 360px;
+  }
+}
+
+@media (min-width: 1180px) {
+  .workspace {
+    grid-template-columns: minmax(0, 1fr) minmax(360px, 420px);
+  }
+
+  .nav-panel .exercise-item {
+    flex-basis: clamp(190px, 15vw, 240px);
+  }
+}
