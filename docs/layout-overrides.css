@@ -1,8 +1,8 @@
-/* Workbench layout: exercises on top, problem + database wide, editor + result compact. */
+/* Desktop-first workbench: exercises on top, problem/database and editor/result split 5:5. */
 
 @media (min-width: 768px) {
   .workspace {
-    grid-template-columns: minmax(0, 1fr) minmax(340px, 400px);
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     gap: 12px;
     align-items: start;
   }
@@ -46,21 +46,16 @@
     scroll-snap-align: start;
   }
 
-  .database-column {
-    grid-column: 1;
+  .database-column,
+  .main-column {
     min-width: 0;
     display: grid;
     gap: 12px;
     align-content: start;
   }
 
-  .main-column {
-    grid-column: 2;
-    min-width: 0;
-    display: grid;
-    gap: 12px;
-    align-content: start;
-  }
+  .database-column { grid-column: 1; }
+  .main-column { grid-column: 2; }
 
   .db-panel,
   .workspace.db-open .db-panel {
@@ -97,23 +92,55 @@
   }
 
   .result-area {
-    max-height: 360px;
+    max-height: 420px;
   }
+
+  .schema-list {
+    min-width: 920px;
+  }
+}
+
+.db-context-card {
+  margin: 0 0 12px;
+  padding: 11px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface-muted);
+  line-height: 1.6;
+}
+
+.db-context-card strong {
+  display: block;
+  margin-bottom: 3px;
+  font-size: 12px;
+}
+
+.db-context-card p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.db-context-card .db-context-dataset {
+  margin-top: 5px;
+  color: var(--text);
+}
+
+.schema-rule-cell {
+  min-width: 150px;
+  white-space: normal;
+  font-family: var(--mono);
+  line-height: 1.5;
+}
+
+.schema-note-cell {
+  min-width: 230px;
+  white-space: normal;
+  line-height: 1.55;
 }
 
 @media (min-width: 768px) and (max-width: 1179px) {
-  /* The database is inline at this width, so the legacy drawer button is unnecessary. */
   .toolbar-right > .secondary-button {
     display: none;
-  }
-}
-
-@media (min-width: 1180px) {
-  .workspace {
-    grid-template-columns: minmax(0, 1fr) minmax(360px, 420px);
-  }
-
-  .nav-panel .exercise-item {
-    flex-basis: clamp(190px, 15vw, 240px);
   }
 }
