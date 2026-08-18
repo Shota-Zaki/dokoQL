@@ -62,7 +62,8 @@
     align-content: start;
   }
 
-  .db-panel {
+  .db-panel,
+  .workspace.db-open .db-panel {
     position: static;
     right: auto;
     top: auto;
@@ -97,6 +98,13 @@
 
   .result-area {
     max-height: 360px;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1179px) {
+  /* The database is inline at this width, so the legacy drawer button is unnecessary. */
+  .toolbar-right > .secondary-button {
+    display: none;
   }
 }
 
