@@ -7,6 +7,7 @@
   <meta name="description" content="ブラウザだけでSQLを実行しながら学べる自己学習用ワークベンチ">
   <title>SQL Practice Lab</title>
   <link rel="stylesheet" href="./styles.css">
+  <link rel="stylesheet" href="./layout-overrides.css">
 </head>
 <body>
   <div id="app" class="app-shell">
@@ -32,8 +33,8 @@
 
     <nav class="mobile-tabs" aria-label="モバイル表示切替">
       <button type="button" data-mobile-view="problem" class="active">問題</button>
-      <button type="button" data-mobile-view="editor">SQL</button>
       <button type="button" data-mobile-view="database">DB</button>
+      <button type="button" data-mobile-view="editor">SQL</button>
       <button type="button" data-mobile-view="result">結果</button>
     </nav>
 
@@ -67,7 +68,7 @@
         <div id="exerciseList" class="exercise-list" role="list"></div>
       </aside>
 
-      <section class="main-column" data-mobile-panel="editor">
+      <section class="database-column">
         <article class="panel problem-card" data-mobile-panel="problem">
           <div class="problem-meta">
             <div>
@@ -84,7 +85,29 @@
           <div id="sourceNote" class="source-note">公開リポジトリ向けに、学習目的と条件を保った表現へ再構成しています。</div>
         </article>
 
-        <section class="panel editor-card">
+        <aside class="panel db-panel" data-mobile-panel="database">
+          <div class="panel-heading">
+            <div>
+              <span class="eyebrow">DATABASE</span>
+              <h2>テーブル</h2>
+            </div>
+            <button id="refreshDbButton" class="icon-button" type="button" aria-label="DB表示を更新">↻</button>
+          </div>
+          <div id="tableTabs" class="table-tabs"></div>
+          <div class="db-subtabs" role="tablist">
+            <button type="button" data-db-view="data" class="active">データ</button>
+            <button type="button" data-db-view="schema">定義</button>
+          </div>
+          <div id="dbInspector" class="db-inspector empty-state">DBを準備しています。</div>
+          <details class="dataset-note">
+            <summary>初期データについて</summary>
+            <p>公開用途のため、設問条件を満たす学習用データとして再構成しています。外部サービスの非公開データは取り込んでいません。</p>
+          </details>
+        </aside>
+      </section>
+
+      <section class="main-column">
+        <section class="panel editor-card" data-mobile-panel="editor">
           <div class="panel-heading editor-heading">
             <div>
               <span class="eyebrow">SQL EDITOR</span>
@@ -119,26 +142,6 @@
           <div id="resultArea" class="result-area empty-state">SQLを実行すると、ここに結果が表示されます。</div>
         </section>
       </section>
-
-      <aside class="panel db-panel" data-mobile-panel="database">
-        <div class="panel-heading">
-          <div>
-            <span class="eyebrow">DATABASE</span>
-            <h2>テーブル</h2>
-          </div>
-          <button id="refreshDbButton" class="icon-button" type="button" aria-label="DB表示を更新">↻</button>
-        </div>
-        <div id="tableTabs" class="table-tabs"></div>
-        <div class="db-subtabs" role="tablist">
-          <button type="button" data-db-view="data" class="active">データ</button>
-          <button type="button" data-db-view="schema">定義</button>
-        </div>
-        <div id="dbInspector" class="db-inspector empty-state">DBを準備しています。</div>
-        <details class="dataset-note">
-          <summary>初期データについて</summary>
-          <p>公開用途のため、設問条件を満たす学習用データとして再構成しています。外部サービスの非公開データは取り込んでいません。</p>
-        </details>
-      </aside>
     </main>
 
     <dialog id="answerDialog" class="answer-dialog">
