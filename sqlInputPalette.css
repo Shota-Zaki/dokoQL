@@ -117,12 +117,18 @@
   color: #24343b;
   font: 700 11px/1.2 var(--mono);
   white-space: nowrap;
+  cursor: pointer;
 }
 
 .sql-palette-chip:hover {
   border-color: #90c9c3;
   background: var(--accent-soft);
   color: var(--accent-dark);
+}
+
+.sql-palette-chip:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
 }
 
 .keyword-chip {
@@ -152,67 +158,128 @@
 
 @media (min-width: 768px) {
   .sql-input-palette.sql-input-palette-card {
-    gap: 3px;
+    gap: var(--palette-row-gap, 4px);
+    align-content: start;
+  }
+
+  .sql-input-palette-card.palette-fitted {
+    overflow: hidden !important;
+    scrollbar-width: none;
+  }
+
+  .sql-input-palette-card.palette-needs-scroll {
+    overflow: auto !important;
+    scrollbar-width: thin;
   }
 
   .sql-input-palette-card .sql-palette-header {
-    gap: 7px;
-    padding-bottom: 1px;
+    gap: var(--palette-header-gap, 7px);
+    padding-bottom: var(--palette-section-pad, 3px);
   }
 
   .sql-input-palette-card .sql-palette-heading {
-    gap: 5px;
+    gap: 0;
     flex-wrap: nowrap;
   }
 
   .sql-input-palette-card .sql-palette-header strong {
-    font-size: 10px;
+    font-size: var(--palette-title-size, 12px);
+    line-height: 1.15;
     white-space: nowrap;
   }
 
   .sql-input-palette-card .sql-palette-header span,
   .sql-input-palette-card .sql-palette-qualify {
-    font-size: 8px;
+    font-size: var(--palette-meta-size, 9.5px);
+    line-height: 1.2;
   }
 
   .sql-input-palette-card .sql-palette-header-actions {
-    gap: 5px;
+    gap: var(--palette-item-gap-x, 4px);
+  }
+
+  .sql-input-palette-card .sql-palette-qualify {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+  }
+
+  .sql-input-palette-card .sql-palette-qualify input {
+    margin: 0;
   }
 
   .sql-input-palette-card .sql-palette-collapse {
-    min-height: 22px;
+    min-height: var(--palette-chip-height, 27px);
     border-radius: 6px;
-    padding: 2px 6px;
-    font-size: 8px;
+    padding: var(--palette-chip-pad-y, 3.5px) var(--palette-chip-pad-x, 7px);
+    font-size: var(--palette-meta-size, 9.5px);
   }
 
   .sql-input-palette-card .sql-palette-row {
-    grid-template-columns: 64px minmax(0, 1fr);
-    gap: 4px;
+    grid-template-columns: clamp(42px, 12%, 58px) minmax(0, 1fr);
+    gap: var(--palette-item-gap-x, 4px);
+    padding-top: var(--palette-section-pad, 3px);
+    border-top: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
+  }
+
+  .sql-input-palette-card .sql-palette-header + .sql-palette-row {
+    padding-top: 0;
+    border-top: 0;
   }
 
   .sql-input-palette-card .sql-palette-label {
-    font-size: 8px;
-    line-height: 21px;
+    padding-top: var(--palette-chip-pad-y, 3.5px);
+    color: var(--muted);
+    font-size: var(--palette-label-size, 10px);
+    font-weight: 800;
+    line-height: 1.12;
+    white-space: pre-line;
+    overflow-wrap: anywhere;
   }
 
   .sql-input-palette-card .sql-palette-items {
-    gap: 2px 3px;
-    font-size: 8px;
-    line-height: 1.15;
+    gap: var(--palette-item-gap-y, 3.5px) var(--palette-item-gap-x, 4px);
+    font-size: var(--palette-chip-size, 10.5px);
+    line-height: 1.1;
+    align-items: center;
   }
 
   .sql-input-palette-card .sql-palette-chip {
-    min-height: 21px;
-    border-radius: 5px;
-    padding: 2px 5px;
-    font-size: 8px;
-    line-height: 1.1;
+    min-height: var(--palette-chip-height, 27px);
+    border-radius: 6px;
+    padding: var(--palette-chip-pad-y, 3.5px) var(--palette-chip-pad-x, 7px);
+    font-size: var(--palette-chip-size, 10.5px);
+    line-height: 1.08;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .sql-input-palette-card .table-chip,
+  .sql-input-palette-card .column-chip {
+    max-width: 100%;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .sql-input-palette-card .sql-chip-separator {
+    position: relative;
+    margin-left: var(--palette-item-gap-x, 4px);
+  }
+
+  .sql-input-palette-card .sql-chip-separator::before {
+    content: '';
+    position: absolute;
+    left: calc(-1 * var(--palette-item-gap-x, 4px));
+    top: 18%;
+    bottom: 18%;
+    width: 1px;
+    background: var(--border);
   }
 
   .sql-input-palette-card .recommended-table::before {
     margin-right: 3px;
-    font-size: 6px;
+    font-size: 0.7em;
   }
 }
 
@@ -255,6 +322,7 @@
 
   .sql-palette-label {
     line-height: 1.3;
+    white-space: pre-line;
   }
 
   .sql-palette-items {
