@@ -1,70 +1,94 @@
-/* Desktop-first workbench: keep problem/database/editor/result dominant and compact everything else. */
+/* Desktop-first single-screen workbench. */
 
 .problem-select-field { display: none; }
 
 @media (min-width: 768px) {
-  .topbar {
-    min-height: 48px;
-    padding: 6px 12px;
-    gap: 10px;
+  html,
+  body {
+    height: 100%;
+    overflow: hidden;
   }
 
-  .brand-block { gap: 8px; }
-  .brand-mark {
-    width: 32px;
-    height: 32px;
-    border-radius: 9px;
-    font-size: 12px;
+  body { min-height: 0; }
+
+  .app-shell {
+    height: 100vh;
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
   }
-  .brand-block h1 { font-size: 14px; }
+
+  .topbar {
+    flex: 0 0 40px;
+    min-height: 40px;
+    padding: 4px 8px;
+    gap: 8px;
+    position: static;
+  }
+
+  .brand-block { gap: 6px; }
+  .brand-mark {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    font-size: 11px;
+  }
+  .brand-block h1 { font-size: 13px; }
   .brand-block p { display: none; }
 
   .topbar-actions {
-    gap: 6px;
+    gap: 5px;
     flex-wrap: nowrap;
   }
 
   .topbar-actions .compact-field {
-    grid-template-columns: auto minmax(140px, 210px);
-    gap: 5px;
+    grid-template-columns: auto minmax(120px, 190px);
+    gap: 4px;
   }
 
-  .topbar-actions .field span { font-size: 10px; }
+  .topbar-actions .field span { font-size: 9px; }
   .topbar-actions select {
-    min-height: 32px;
-    padding: 4px 7px;
+    min-height: 28px;
+    padding: 2px 6px;
+    font-size: 11px;
   }
 
   .progress-chip {
-    padding: 4px 8px;
-    font-size: 12px;
+    padding: 3px 7px;
+    font-size: 11px;
   }
 
   .header-reference-link {
-    min-height: 32px;
-    padding: 5px 8px;
-    font-size: 12px;
+    min-height: 28px;
+    padding: 4px 7px;
+    font-size: 11px;
   }
 
   .workspace {
+    flex: 1 1 auto;
+    height: auto;
+    min-height: 0;
+    overflow: hidden;
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    gap: 8px;
-    padding: 8px;
-    min-height: calc(100vh - 48px);
-    align-items: start;
+    grid-template-rows: 34px minmax(0, 1fr);
+    gap: 6px;
+    padding: 6px;
+    align-items: stretch;
   }
 
   .nav-panel {
     grid-column: 1 / -1;
+    grid-row: 1;
     position: static;
-    top: auto;
+    min-height: 0;
     max-height: none;
-    overflow: visible;
+    overflow: hidden;
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 6px 9px;
-    border-radius: 10px;
+    gap: 6px;
+    padding: 3px 6px;
+    border-radius: 9px;
     box-shadow: none;
   }
 
@@ -75,49 +99,81 @@
 
   .problem-select-field {
     display: grid;
-    flex: 1 1 480px;
-    min-width: 280px;
+    flex: 1 1 auto;
+    min-width: 200px;
   }
 
   .nav-panel .compact-nav-field,
   .nav-panel .filter-area .field {
     grid-template-columns: auto minmax(0, 1fr);
     align-items: center;
-    gap: 5px;
+    gap: 4px;
   }
 
   .nav-panel .field > span {
     white-space: nowrap;
-    font-size: 10px;
+    font-size: 9px;
   }
 
   .nav-panel select {
-    min-height: 32px;
-    padding: 4px 7px;
-    font-size: 12px;
+    min-height: 27px;
+    padding: 2px 6px;
+    font-size: 11px;
   }
 
   .nav-panel .filter-area {
     display: flex;
     flex: 0 0 auto;
-    grid-template-columns: none;
-    gap: 8px;
+    gap: 6px;
     margin: 0;
   }
 
-  .nav-panel .filter-area .field:first-child { width: 210px; }
-  .nav-panel .filter-area .field:last-child { width: 150px; }
+  .nav-panel .filter-area .field:first-child { width: clamp(150px, 18vw, 210px); }
+  .nav-panel .filter-area .field:last-child { width: clamp(112px, 13vw, 150px); }
 
   .database-column,
   .main-column {
+    grid-row: 2;
     min-width: 0;
+    min-height: 0;
+    height: 100%;
+    overflow: hidden;
     display: grid;
-    gap: 8px;
-    align-content: start;
+    gap: 6px;
+    align-content: stretch;
   }
 
-  .database-column { grid-column: 1; }
-  .main-column { grid-column: 2; }
+  .database-column {
+    grid-column: 1;
+    grid-template-rows: minmax(94px, 0.28fr) minmax(0, 0.72fr);
+  }
+
+  .main-column {
+    grid-column: 2;
+    grid-template-rows: minmax(240px, 0.56fr) minmax(0, 0.44fr);
+  }
+
+  .problem-card,
+  .editor-card,
+  .result-card,
+  .db-panel {
+    min-height: 0;
+    padding: 8px;
+  }
+
+  .problem-card {
+    overflow: auto;
+    scrollbar-width: thin;
+  }
+
+  .problem-meta { gap: 7px; }
+  .problem-meta h2,
+  .panel-heading h2 { font-size: 14px; }
+  .problem-prompt {
+    margin-top: 7px;
+    line-height: 1.55;
+    font-size: 13px;
+  }
 
   .source-note,
   .keyboard-hint,
@@ -132,53 +188,127 @@
     top: auto;
     bottom: auto;
     width: auto;
+    min-height: 0;
     max-height: none;
-    min-height: 560px;
-    overflow: visible;
+    overflow: hidden;
     transform: none;
     transition: none;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .db-panel .panel-heading { flex: 0 0 auto; }
+  .table-tabs { margin: 6px 0 5px; gap: 4px; }
+  .table-tabs button,
+  .db-subtabs button {
+    min-height: 27px;
+    padding: 3px 7px;
+    font-size: 10px;
   }
 
   .db-inspector {
-    min-height: 420px;
-    height: clamp(420px, 60vh, 760px);
+    flex: 1 1 auto;
+    min-height: 0;
+    height: auto;
     max-height: none;
+    margin-top: 5px;
     overflow: auto;
     align-content: start;
+    scrollbar-width: thin;
   }
 
-  .db-panel .data-table { font-size: 13px; }
-  .sql-editor { min-height: 320px; }
-  .result-card { min-height: 300px; }
-  .result-area { max-height: 460px; }
+  .db-panel .data-table { font-size: 11px; }
+  .db-panel .data-table th,
+  .db-panel .data-table td { padding: 5px 6px; }
+
+  .editor-card {
+    overflow: auto;
+    display: flex;
+    flex-direction: column;
+    scrollbar-width: thin;
+  }
+
+  .editor-heading { margin-bottom: 6px; flex: 0 0 auto; }
+
+  .editor-card .sql-input-palette {
+    flex: 0 0 auto;
+    margin-bottom: 6px;
+  }
+
+  .sql-editor {
+    flex: 1 1 140px;
+    min-height: 100px;
+    max-height: none;
+    resize: none;
+    padding: 10px;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  .editor-toolbar {
+    flex: 0 0 auto;
+    margin-top: 6px;
+    gap: 6px;
+  }
+
+  .primary-button,
+  .success-button,
+  .secondary-button,
+  .text-button,
+  .icon-button {
+    min-height: 30px;
+    padding: 5px 9px;
+    font-size: 11px;
+  }
+
+  .icon-button { width: 32px; padding: 0; }
+
+  .result-card {
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .result-card .panel-heading { flex: 0 0 auto; }
+  .judge-message { flex: 0 0 auto; margin-top: 6px; padding: 7px 9px; font-size: 11px; }
+
+  .result-area {
+    flex: 1 1 auto;
+    min-height: 0;
+    max-height: none;
+    margin-top: 6px;
+    overflow: auto;
+    scrollbar-width: thin;
+  }
+
   .schema-list { min-width: 920px; }
 }
 
 .next-problem-button { margin-left: 2px; }
 
 .db-context-card {
-  margin: 0 0 12px;
-  padding: 11px 12px;
+  margin: 0 0 7px;
+  padding: 7px 8px;
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: 8px;
   background: var(--surface-muted);
-  line-height: 1.6;
+  line-height: 1.45;
 }
 
 .db-context-card strong {
   display: block;
-  margin-bottom: 3px;
-  font-size: 12px;
+  margin-bottom: 2px;
+  font-size: 11px;
 }
 
 .db-context-card p {
   margin: 0;
   color: var(--muted);
-  font-size: 11px;
+  font-size: 10px;
 }
 
 .db-context-card .db-context-dataset {
-  margin-top: 5px;
+  margin-top: 3px;
   color: var(--text);
 }
 
@@ -186,18 +316,41 @@
   min-width: 150px;
   white-space: normal;
   font-family: var(--mono);
-  line-height: 1.5;
+  line-height: 1.45;
 }
 
 .schema-note-cell {
   min-width: 230px;
   white-space: normal;
-  line-height: 1.55;
+  line-height: 1.45;
+}
+
+@media (min-width: 768px) and (max-height: 720px) {
+  .topbar {
+    flex-basis: 36px;
+    min-height: 36px;
+    padding-block: 3px;
+  }
+
+  .brand-mark { width: 26px; height: 26px; }
+  .workspace {
+    grid-template-rows: 30px minmax(0, 1fr);
+    gap: 4px;
+    padding: 4px;
+  }
+  .nav-panel { padding-block: 2px; }
+  .problem-card,
+  .editor-card,
+  .result-card,
+  .db-panel { padding: 6px; }
+  .database-column,
+  .main-column { gap: 4px; }
+  .database-column { grid-template-rows: minmax(82px, 0.25fr) minmax(0, 0.75fr); }
+  .main-column { grid-template-rows: minmax(210px, 0.55fr) minmax(0, 0.45fr); }
+  .problem-prompt { margin-top: 5px; line-height: 1.45; }
+  .sql-editor { min-height: 88px; }
 }
 
 @media (min-width: 768px) and (max-width: 1179px) {
   .toolbar-right > .secondary-button { display: none; }
-
-  .nav-panel { flex-wrap: wrap; }
-  .problem-select-field { flex-basis: 100%; }
 }
