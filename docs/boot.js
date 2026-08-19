@@ -8,5 +8,6 @@ await import('./problemSelectEnhancer.js');
 await import('./nextProblemEnhancer.js');
 await import('./retryEnhancer.js');
 await import('./sqlInputPalette.js');
+await import('./editorLayoutEnhancer.js');
 await import('./hintEnhancer.js');
 await import('./answerEnhancer.js');

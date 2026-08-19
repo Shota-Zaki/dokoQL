@@ -150,7 +150,7 @@
 
   .main-column {
     grid-column: 2;
-    grid-template-rows: minmax(240px, 0.56fr) minmax(0, 0.44fr);
+    grid-template-rows: auto minmax(0, 1fr) minmax(84px, 0.24fr);
   }
 
   .problem-card,
@@ -221,23 +221,32 @@
   .db-panel .data-table th,
   .db-panel .data-table td { padding: 5px 6px; }
 
-  .editor-card {
+  .sql-input-palette-card {
+    min-height: 0;
+    max-height: min(150px, 22vh);
+    margin: 0;
+    padding: 8px;
     overflow: auto;
+    scrollbar-width: thin;
+  }
+
+  .sql-input-palette-card.is-collapsed {
+    max-height: 44px;
+    overflow: hidden;
+  }
+
+  .editor-card {
+    min-height: 0;
+    overflow: hidden;
     display: flex;
     flex-direction: column;
-    scrollbar-width: thin;
   }
 
   .editor-heading { margin-bottom: 6px; flex: 0 0 auto; }
 
-  .editor-card .sql-input-palette {
-    flex: 0 0 auto;
-    margin-bottom: 6px;
-  }
-
   .sql-editor {
-    flex: 1 1 140px;
-    min-height: 100px;
+    flex: 1 1 auto;
+    min-height: 0;
     max-height: none;
     resize: none;
     padding: 10px;
@@ -264,21 +273,47 @@
   .icon-button { width: 32px; padding: 0; }
 
   .result-card {
+    min-height: 0;
     overflow: hidden;
     display: flex;
     flex-direction: column;
+    padding-top: 6px;
+    padding-bottom: 6px;
   }
 
-  .result-card .panel-heading { flex: 0 0 auto; }
-  .judge-message { flex: 0 0 auto; margin-top: 6px; padding: 7px 9px; font-size: 11px; }
+  .result-card .panel-heading {
+    flex: 0 0 auto;
+    min-height: 22px;
+  }
+
+  .result-title-inline {
+    display: flex;
+    align-items: baseline;
+    gap: 7px;
+    min-width: 0;
+  }
+
+  .result-title-inline .eyebrow,
+  .result-title-inline h2 {
+    margin: 0;
+    white-space: nowrap;
+  }
+
+  .result-title-inline h2 { font-size: 13px; }
+  .judge-message { flex: 0 0 auto; margin-top: 4px; padding: 6px 8px; font-size: 11px; }
 
   .result-area {
     flex: 1 1 auto;
     min-height: 0;
     max-height: none;
-    margin-top: 6px;
+    margin-top: 4px;
     overflow: auto;
     scrollbar-width: thin;
+  }
+
+  .result-card .empty-state {
+    min-height: 0;
+    padding: 6px;
   }
 
   .schema-list { min-width: 920px; }
@@ -346,9 +381,14 @@
   .database-column,
   .main-column { gap: 4px; }
   .database-column { grid-template-rows: minmax(82px, 0.25fr) minmax(0, 0.75fr); }
-  .main-column { grid-template-rows: minmax(210px, 0.55fr) minmax(0, 0.45fr); }
+  .main-column { grid-template-rows: auto minmax(0, 1fr) minmax(72px, 0.20fr); }
+  .sql-input-palette-card {
+    max-height: min(110px, 18vh);
+    padding: 6px;
+  }
+  .sql-input-palette-card.is-collapsed { max-height: 38px; }
   .problem-prompt { margin-top: 5px; line-height: 1.45; }
-  .sql-editor { min-height: 88px; }
+  .result-card { padding-block: 5px; }
 }
 
 @media (min-width: 768px) and (max-width: 1179px) {
