@@ -6,6 +6,7 @@ const datasetSelect = document.getElementById('datasetSelect');
 const exerciseList = document.getElementById('exerciseList');
 const problemTitle = document.getElementById('problemTitle');
 const COLLAPSE_KEY = 'sql-input-palette-collapsed-v1';
+const desktopMedia = window.matchMedia('(min-width: 768px)');
 
 if (editor) {
   const css = document.createElement('link');
@@ -21,6 +22,7 @@ if (editor) {
   let selectedTable = '';
   let qualifiedColumns = false;
   let collapsed = loadCollapsedState();
+  let fitFrame = 0;
 
   const keywordGroups = [
     {
@@ -40,6 +42,12 @@ if (editor) {
       tokens: ['COUNT()', 'SUM()', 'AVG()', 'MAX()', 'MIN()', 'COALESCE()', 'CASE', 'WHEN', 'THEN', 'ELSE', 'END', '*', ',', '=', '<>', '>', '<', '>=', '<=', '(', ')', ';'],
     },
   ];
+
+  const visualGroupStarts = new Set([
+    'INSERT INTO', 'UPDATE', 'DELETE FROM', 'ORDER BY',
+    'JOIN', 'LIMIT', 'UNION',
+    'CASE', '*',
+  ]);
 
   function loadCollapsedState() {
     try { return localStorage.getItem(COLLAPSE_KEY) === '1'; }
@@ -202,12 +210,19 @@ if (editor) {
     return button;
   }
 
+  function displayLabel(label) {
+    if (label === '集計・結合') return '集計\n結合';
+    if (label === '関数・記号') return '関数\n記号';
+    if (label.startsWith('カラム｜')) return `カラム\n${label.slice('カラム｜'.length)}`;
+    return label;
+  }
+
   function row(label, body) {
     const wrapper = document.createElement('div');
     wrapper.className = 'sql-palette-row';
     const heading = document.createElement('span');
     heading.className = 'sql-palette-label';
-    heading.textContent = label;
+    heading.textContent = displayLabel(label);
     const items = document.createElement('div');
     items.className = 'sql-palette-items';
     items.append(...body);
@@ -221,7 +236,7 @@ if (editor) {
 
     const heading = document.createElement('div');
     heading.className = 'sql-palette-heading';
-    heading.innerHTML = '<strong>クリック入力</strong><span>SQL文・テーブル・カラムを選ぶとカーソル位置へ入ります</span>';
+    heading.innerHTML = '<strong>クリック入力</strong>';
     header.append(heading);
 
     const actions = document.createElement('div');
@@ -255,18 +270,95 @@ if (editor) {
     return header;
   }
 
+  function applyPaletteScale(scale) {
+    const setPx = (name, value) => palette.style.setProperty(name, `${value.toFixed(2)}px`);
+    setPx('--palette-title-size', 12 * scale);
+    setPx('--palette-meta-size', 9.5 * scale);
+    setPx('--palette-label-size', 10 * scale);
+    setPx('--palette-chip-size', 10.5 * scale);
+    setPx('--palette-chip-height', 27 * scale);
+    setPx('--palette-chip-pad-x', 7 * scale);
+    setPx('--palette-chip-pad-y', 3.5 * scale);
+    setPx('--palette-row-gap', 4 * scale);
+    setPx('--palette-item-gap-x', 4 * scale);
+    setPx('--palette-item-gap-y', 3.5 * scale);
+    setPx('--palette-section-pad', 3 * scale);
+    setPx('--palette-header-gap', 7 * scale);
+  }
+
+  function paletteFits() {
+    return palette.scrollHeight <= palette.clientHeight + 1 && palette.scrollWidth <= palette.clientWidth + 1;
+  }
+
+  function fitPaletteToCard() {
+    fitFrame = 0;
+    palette.classList.remove('palette-fitted', 'palette-needs-scroll');
+
+    if (!desktopMedia.matches || collapsed || palette.classList.contains('hidden') || palette.clientHeight <= 0) {
+      palette.style.removeProperty('--palette-title-size');
+      palette.style.removeProperty('--palette-meta-size');
+      palette.style.removeProperty('--palette-label-size');
+      palette.style.removeProperty('--palette-chip-size');
+      palette.style.removeProperty('--palette-chip-height');
+      palette.style.removeProperty('--palette-chip-pad-x');
+      palette.style.removeProperty('--palette-chip-pad-y');
+      palette.style.removeProperty('--palette-row-gap');
+      palette.style.removeProperty('--palette-item-gap-x');
+      palette.style.removeProperty('--palette-item-gap-y');
+      palette.style.removeProperty('--palette-section-pad');
+      palette.style.removeProperty('--palette-header-gap');
+      return;
+    }
+
+    const minScale = 0.78;
+    const maxScale = 1.55;
+    applyPaletteScale(minScale);
+
+    if (!paletteFits()) {
+      palette.classList.add('palette-needs-scroll');
+      return;
+    }
+
+    let low = minScale;
+    let high = maxScale;
+    let best = minScale;
+
+    for (let i = 0; i < 9; i += 1) {
+      const mid = (low + high) / 2;
+      applyPaletteScale(mid);
+      if (paletteFits()) {
+        best = mid;
+        low = mid;
+      } else {
+        high = mid;
+      }
+    }
+
+    applyPaletteScale(Math.max(minScale, best - 0.015));
+    palette.classList.add('palette-fitted');
+  }
+
+  function scheduleFit() {
+    if (fitFrame) cancelAnimationFrame(fitFrame);
+    fitFrame = requestAnimationFrame(() => requestAnimationFrame(fitPaletteToCard));
+  }
+
   function render() {
     const datasetId = datasetSelect?.value || 'bank';
     const exercise = activeExercise();
     if (exercise?.type === 'design') {
       palette.classList.add('hidden');
+      scheduleFit();
       return;
     }
     palette.classList.remove('hidden');
     palette.classList.toggle('is-collapsed', collapsed);
     palette.replaceChildren(renderHeader());
 
-    if (collapsed) return;
+    if (collapsed) {
+      scheduleFit();
+      return;
+    }
 
     const catalog = buildCatalog(datasetId);
     const recommended = problemTables(exercise).filter(name => catalog.has(name));
@@ -277,7 +369,7 @@ if (editor) {
     for (const group of keywordGroups) {
       palette.append(row(group.label, group.tokens.map(token => chip(
         token,
-        'keyword-chip',
+        `keyword-chip${visualGroupStarts.has(token) ? ' sql-chip-separator' : ''}`,
         () => insertToken(token, { functionCursor: token.endsWith('()') }),
       ))));
     }
@@ -301,11 +393,15 @@ if (editor) {
     });
     const columnLabel = selectedTable ? `カラム｜${selectedTable}` : 'カラム';
     palette.append(row(columnLabel, columnButtons.length ? columnButtons : [document.createTextNode('カラム情報はありません')]));
+    scheduleFit();
   }
 
   const scheduleRender = () => setTimeout(render, 0);
   datasetSelect?.addEventListener('change', () => { selectedTable = ''; scheduleRender(); });
   exerciseList?.addEventListener('click', scheduleRender, true);
   problemTitle && new MutationObserver(scheduleRender).observe(problemTitle, { childList: true, characterData: true, subtree: true });
+  desktopMedia.addEventListener?.('change', scheduleFit);
+  window.addEventListener('resize', scheduleFit, { passive: true });
+  new ResizeObserver(scheduleFit).observe(palette);
   render();
 }
