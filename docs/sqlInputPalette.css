@@ -150,6 +150,72 @@
   font-weight: 650;
 }
 
+@media (min-width: 768px) {
+  .sql-input-palette.sql-input-palette-card {
+    gap: 3px;
+  }
+
+  .sql-input-palette-card .sql-palette-header {
+    gap: 7px;
+    padding-bottom: 1px;
+  }
+
+  .sql-input-palette-card .sql-palette-heading {
+    gap: 5px;
+    flex-wrap: nowrap;
+  }
+
+  .sql-input-palette-card .sql-palette-header strong {
+    font-size: 10px;
+    white-space: nowrap;
+  }
+
+  .sql-input-palette-card .sql-palette-header span,
+  .sql-input-palette-card .sql-palette-qualify {
+    font-size: 8px;
+  }
+
+  .sql-input-palette-card .sql-palette-header-actions {
+    gap: 5px;
+  }
+
+  .sql-input-palette-card .sql-palette-collapse {
+    min-height: 22px;
+    border-radius: 6px;
+    padding: 2px 6px;
+    font-size: 8px;
+  }
+
+  .sql-input-palette-card .sql-palette-row {
+    grid-template-columns: 64px minmax(0, 1fr);
+    gap: 4px;
+  }
+
+  .sql-input-palette-card .sql-palette-label {
+    font-size: 8px;
+    line-height: 21px;
+  }
+
+  .sql-input-palette-card .sql-palette-items {
+    gap: 2px 3px;
+    font-size: 8px;
+    line-height: 1.15;
+  }
+
+  .sql-input-palette-card .sql-palette-chip {
+    min-height: 21px;
+    border-radius: 5px;
+    padding: 2px 5px;
+    font-size: 8px;
+    line-height: 1.1;
+  }
+
+  .sql-input-palette-card .recommended-table::before {
+    margin-right: 3px;
+    font-size: 6px;
+  }
+}
+
 @media (max-width: 767px) {
   .sql-input-palette {
     padding: 8px;
