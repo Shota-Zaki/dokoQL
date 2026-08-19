@@ -150,7 +150,7 @@
 
   .main-column {
     grid-column: 2;
-    grid-template-rows: auto minmax(0, 1fr) minmax(84px, 0.24fr);
+    grid-template-rows: minmax(176px, 205px) minmax(0, 1fr) minmax(84px, 0.22fr);
   }
 
   .problem-card,
@@ -223,15 +223,17 @@
 
   .sql-input-palette-card {
     min-height: 0;
-    max-height: min(150px, 22vh);
+    height: 100%;
+    max-height: none;
     margin: 0;
-    padding: 8px;
-    overflow: auto;
-    scrollbar-width: thin;
+    padding: 7px 8px;
+    overflow: hidden;
   }
 
   .sql-input-palette-card.is-collapsed {
-    max-height: 44px;
+    height: auto;
+    max-height: 40px;
+    align-self: start;
     overflow: hidden;
   }
 
@@ -381,16 +383,17 @@
   .database-column,
   .main-column { gap: 4px; }
   .database-column { grid-template-rows: minmax(82px, 0.25fr) minmax(0, 0.75fr); }
-  .main-column { grid-template-rows: auto minmax(0, 1fr) minmax(72px, 0.20fr); }
-  .sql-input-palette-card {
-    max-height: min(110px, 18vh);
-    padding: 6px;
-  }
-  .sql-input-palette-card.is-collapsed { max-height: 38px; }
+  .main-column { grid-template-rows: minmax(150px, 168px) minmax(0, 1fr) minmax(72px, 0.18fr); }
+  .sql-input-palette-card { padding: 5px 6px; }
+  .sql-input-palette-card.is-collapsed { max-height: 36px; }
   .problem-prompt { margin-top: 5px; line-height: 1.45; }
   .result-card { padding-block: 5px; }
 }
 
 @media (min-width: 768px) and (max-width: 1179px) {
   .toolbar-right > .secondary-button { display: none; }
+  .sql-input-palette-card {
+    overflow: auto;
+    scrollbar-width: thin;
+  }
 }
