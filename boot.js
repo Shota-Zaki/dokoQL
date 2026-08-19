@@ -4,6 +4,7 @@ await import('./tableGuideEnhancer.js');
 await import('./app.js');
 await import('./dbNotesEnhancer.js');
 await import('./headerReferenceEnhancer.js');
+await import('./problemSelectEnhancer.js');
 await import('./nextProblemEnhancer.js');
 await import('./retryEnhancer.js');
 await import('./sqlInputPalette.js');
