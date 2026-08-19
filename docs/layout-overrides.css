@@ -1,5 +1,7 @@
 /* Desktop-first workbench: keep problem/database/editor/result dominant and compact everything else. */
 
+.problem-select-field { display: none; }
+
 @media (min-width: 768px) {
   .topbar {
     min-height: 48px;
@@ -72,13 +74,13 @@
   }
 
   .problem-select-field {
+    display: grid;
     flex: 1 1 480px;
     min-width: 280px;
   }
 
   .nav-panel .compact-nav-field,
   .nav-panel .filter-area .field {
-    display: grid;
     grid-template-columns: auto minmax(0, 1fr);
     align-items: center;
     gap: 5px;
@@ -196,9 +198,6 @@
 @media (min-width: 768px) and (max-width: 1179px) {
   .toolbar-right > .secondary-button { display: none; }
 
-  .nav-panel {
-    flex-wrap: wrap;
-  }
-
+  .nav-panel { flex-wrap: wrap; }
   .problem-select-field { flex-basis: 100%; }
 }
