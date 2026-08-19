@@ -1,3 +1,8 @@
+const splitCss = document.createElement('link');
+splitCss.rel = 'stylesheet';
+splitCss.href = './editorSplit.css';
+document.head.append(splitCss);
+
 const editor = document.getElementById('sqlEditor');
 const editorCard = editor?.closest('.editor-card');
 const palette = editorCard?.querySelector('.sql-input-palette');
