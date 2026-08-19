@@ -150,7 +150,7 @@
 
   .main-column {
     grid-column: 2;
-    grid-template-rows: minmax(176px, 205px) minmax(0, 1fr) minmax(84px, 0.22fr);
+    grid-template-rows: clamp(250px, 34vh, 320px) minmax(0, 1fr) minmax(84px, 0.22fr);
   }
 
   .problem-card,
@@ -383,7 +383,7 @@
   .database-column,
   .main-column { gap: 4px; }
   .database-column { grid-template-rows: minmax(82px, 0.25fr) minmax(0, 0.75fr); }
-  .main-column { grid-template-rows: minmax(150px, 168px) minmax(0, 1fr) minmax(72px, 0.18fr); }
+  .main-column { grid-template-rows: clamp(205px, 34vh, 235px) minmax(0, 1fr) minmax(72px, 0.18fr); }
   .sql-input-palette-card { padding: 5px 6px; }
   .sql-input-palette-card.is-collapsed { max-height: 36px; }
   .problem-prompt { margin-top: 5px; line-height: 1.45; }
