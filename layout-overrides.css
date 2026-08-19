@@ -20,14 +20,8 @@
     padding: 12px 14px;
   }
 
-  .nav-panel .panel-heading {
-    grid-column: 1;
-  }
-
-  .nav-panel .filter-area {
-    grid-column: 2;
-    margin: 0;
-  }
+  .nav-panel .panel-heading { grid-column: 1; }
+  .nav-panel .filter-area { grid-column: 2; margin: 0; }
 
   .nav-panel .exercise-list {
     grid-column: 1 / -1;
@@ -79,26 +73,23 @@
     align-content: start;
   }
 
-  .db-panel .data-table {
-    font-size: 13px;
-  }
-
-  .sql-editor {
-    min-height: 300px;
-  }
-
-  .result-card {
-    min-height: 280px;
-  }
-
-  .result-area {
-    max-height: 420px;
-  }
-
-  .schema-list {
-    min-width: 920px;
-  }
+  .db-panel .data-table { font-size: 13px; }
+  .sql-editor { min-height: 300px; }
+  .result-card { min-height: 280px; }
+  .result-area { max-height: 420px; }
+  .schema-list { min-width: 920px; }
 }
+
+.header-reference-link {
+  min-height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.next-problem-button { margin-left: 2px; }
 
 .db-context-card {
   margin: 0 0 12px;
@@ -140,7 +131,5 @@
 }
 
 @media (min-width: 768px) and (max-width: 1179px) {
-  .toolbar-right > .secondary-button {
-    display: none;
-  }
+  .toolbar-right > .secondary-button { display: none; }
 }
