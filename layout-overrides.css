@@ -1,9 +1,54 @@
-/* Desktop-first workbench: exercises on top, problem/database and editor/result split 5:5. */
+/* Desktop-first workbench: keep problem/database/editor/result dominant and compact everything else. */
 
 @media (min-width: 768px) {
+  .topbar {
+    min-height: 48px;
+    padding: 6px 12px;
+    gap: 10px;
+  }
+
+  .brand-block { gap: 8px; }
+  .brand-mark {
+    width: 32px;
+    height: 32px;
+    border-radius: 9px;
+    font-size: 12px;
+  }
+  .brand-block h1 { font-size: 14px; }
+  .brand-block p { display: none; }
+
+  .topbar-actions {
+    gap: 6px;
+    flex-wrap: nowrap;
+  }
+
+  .topbar-actions .compact-field {
+    grid-template-columns: auto minmax(140px, 210px);
+    gap: 5px;
+  }
+
+  .topbar-actions .field span { font-size: 10px; }
+  .topbar-actions select {
+    min-height: 32px;
+    padding: 4px 7px;
+  }
+
+  .progress-chip {
+    padding: 4px 8px;
+    font-size: 12px;
+  }
+
+  .header-reference-link {
+    min-height: 32px;
+    padding: 5px 8px;
+    font-size: 12px;
+  }
+
   .workspace {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    gap: 12px;
+    gap: 8px;
+    padding: 8px;
+    min-height: calc(100vh - 48px);
     align-items: start;
   }
 
@@ -12,44 +57,71 @@
     position: static;
     top: auto;
     max-height: none;
-    overflow: hidden;
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(300px, 420px);
-    gap: 10px 16px;
-    align-items: end;
-    padding: 12px 14px;
-  }
-
-  .nav-panel .panel-heading { grid-column: 1; }
-  .nav-panel .filter-area { grid-column: 2; margin: 0; }
-
-  .nav-panel .exercise-list {
-    grid-column: 1 / -1;
+    overflow: visible;
     display: flex;
+    align-items: center;
     gap: 8px;
-    overflow-x: auto;
-    overflow-y: hidden;
-    padding: 2px 2px 8px;
-    scroll-snap-type: x proximity;
-    scrollbar-gutter: stable;
+    padding: 6px 9px;
+    border-radius: 10px;
+    box-shadow: none;
   }
 
-  .nav-panel .exercise-item {
-    flex: 0 0 clamp(180px, 16vw, 230px);
-    min-width: 0;
-    scroll-snap-align: start;
+  .nav-panel .panel-heading,
+  .nav-panel .exercise-list {
+    display: none !important;
   }
+
+  .problem-select-field {
+    flex: 1 1 480px;
+    min-width: 280px;
+  }
+
+  .nav-panel .compact-nav-field,
+  .nav-panel .filter-area .field {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: 5px;
+  }
+
+  .nav-panel .field > span {
+    white-space: nowrap;
+    font-size: 10px;
+  }
+
+  .nav-panel select {
+    min-height: 32px;
+    padding: 4px 7px;
+    font-size: 12px;
+  }
+
+  .nav-panel .filter-area {
+    display: flex;
+    flex: 0 0 auto;
+    grid-template-columns: none;
+    gap: 8px;
+    margin: 0;
+  }
+
+  .nav-panel .filter-area .field:first-child { width: 210px; }
+  .nav-panel .filter-area .field:last-child { width: 150px; }
 
   .database-column,
   .main-column {
     min-width: 0;
     display: grid;
-    gap: 12px;
+    gap: 8px;
     align-content: start;
   }
 
   .database-column { grid-column: 1; }
   .main-column { grid-column: 2; }
+
+  .source-note,
+  .keyboard-hint,
+  .dataset-note {
+    display: none !important;
+  }
 
   .db-panel,
   .workspace.db-open .db-panel {
@@ -67,26 +139,17 @@
 
   .db-inspector {
     min-height: 420px;
-    height: clamp(420px, 56vh, 720px);
+    height: clamp(420px, 60vh, 760px);
     max-height: none;
     overflow: auto;
     align-content: start;
   }
 
   .db-panel .data-table { font-size: 13px; }
-  .sql-editor { min-height: 300px; }
-  .result-card { min-height: 280px; }
-  .result-area { max-height: 420px; }
+  .sql-editor { min-height: 320px; }
+  .result-card { min-height: 300px; }
+  .result-area { max-height: 460px; }
   .schema-list { min-width: 920px; }
-}
-
-.header-reference-link {
-  min-height: 38px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  text-decoration: none;
-  white-space: nowrap;
 }
 
 .next-problem-button { margin-left: 2px; }
@@ -132,4 +195,10 @@
 
 @media (min-width: 768px) and (max-width: 1179px) {
   .toolbar-right > .secondary-button { display: none; }
+
+  .nav-panel {
+    flex-wrap: wrap;
+  }
+
+  .problem-select-field { flex-basis: 100%; }
 }
