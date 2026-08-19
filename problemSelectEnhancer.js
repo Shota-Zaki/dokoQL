@@ -16,6 +16,8 @@ if (navPanel && exerciseList) {
   const filterArea = navPanel.querySelector('.filter-area');
   navPanel.insertBefore(field, filterArea || exerciseList);
 
+  let fallbackPending = false;
+
   function buttons() {
     return Array.from(exerciseList.querySelectorAll('[data-exercise-id]'));
   }
@@ -31,6 +33,17 @@ if (navPanel && exerciseList) {
     const title = button.querySelector('.exercise-label strong')?.textContent?.trim() || '問題';
     const chapter = button.querySelector('.exercise-label span')?.textContent?.trim() || '';
     return `${stateMark(button)} ${title}${chapter ? `｜${chapter}` : ''}`;
+  }
+
+  function selectFirstVisible(rows) {
+    if (fallbackPending || !rows.length) return;
+    fallbackPending = true;
+    queueMicrotask(() => {
+      const currentRows = buttons();
+      const active = currentRows.find(button => button.classList.contains('active'));
+      if (!active) currentRows[0]?.click();
+      fallbackPending = false;
+    });
   }
 
   function syncSelect() {
@@ -54,6 +67,7 @@ if (navPanel && exerciseList) {
     }
 
     select.value = active?.dataset.exerciseId || rows[0].dataset.exerciseId || '';
+    if (!active) selectFirstVisible(rows);
   }
 
   select.addEventListener('change', () => {
