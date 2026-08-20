@@ -49,7 +49,7 @@
 - 初期データは `content/official-*-seed.sql` のローカル同一オリジンファイルから、アプリ起動時に読み込んでからDBを初期化する。
 - `datasets.js` には各ソースのリポジトリ・パス・blob SHAを記録し、どの版に合わせたか追跡可能にする。
 - 問題単位の `setupSql` もソースDBの制約条件に合わせる。ソースに存在しないUNIQUE制約を前提とした `ON CONFLICT` 等を使用しない。
-- 第三者データの出典・ライセンス条件は `content/THIRD_PARTY_NOTICES.txt` に記録する。
+- 第三者データの出典・ライセンス条件は `content/THIRD_PARTY_NOTICES.md` に記録する。
 - CIで3題材のテーブル構成、行数、重要な互換行、独自制約の混入を検査する。
 
 ## 7. Click input
