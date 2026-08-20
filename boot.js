@@ -2,6 +2,8 @@ import './fixes.js';
 await import('./contentIntegration.js');
 await import('./sourcePromptIntegration.js');
 await import('./answerAliasPromptEnhancer.js');
+await import('./datasetCompatibility.js');
+await import('./datasetSeedLoader.js');
 await import('./tableGuideEnhancer.js');
 await import('./app.js');
 await import('./dbNotesEnhancer.js');
