@@ -11,6 +11,7 @@ const publicFiles = [
   'boot.js',
   'app.js',
   'datasets.js',
+  'datasetSeedLoader.js',
   'exercises.js',
   'fixes.js',
   'contentIntegration.js',
