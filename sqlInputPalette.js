@@ -310,7 +310,7 @@ if (editor) {
       return;
     }
 
-    const minScale = 0.78;
+    const minScale = 0.68;
     const maxScale = 1.55;
     applyPaletteScale(minScale);
 
