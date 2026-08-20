@@ -31,21 +31,20 @@ jobs:
           node-version: '22'
       - name: Validate source and exercise data
         run: npm run check
-      - name: Validate published files
+      - name: Build clean Pages artifact
+        run: npm run build:pages
+      - name: Validate generated public files
         run: |
-          test -f docs/index.html
-          test -f docs/boot.js
-          test -f docs/learningContent.js
-          test -f docs/tableGuideEnhancer.js
-          test -f docs/hintEnhancer.js
-          test -f docs/sqlInputPalette.js
-          test -f docs/sqlInputPalette.css
-          test -f docs/retryEnhancer.js
-          test -f docs/content/data-8.js
-          grep -q "tableGuideEnhancer.js" docs/boot.js
-          grep -q "hintEnhancer.js" docs/boot.js
-          grep -q "sqlInputPalette.js" docs/boot.js
-          grep -q "retryEnhancer.js" docs/boot.js
+          test -f _site/index.html
+          test -f _site/boot.js
+          test -f _site/learningContent.js
+          test -f _site/tableGuideEnhancer.js
+          test -f _site/hintEnhancer.js
+          test -f _site/sqlInputPalette.js
+          test -f _site/sqlInputPalette.css
+          test -f _site/retryEnhancer.js
+          test -f _site/content/data-8.js
+          grep -q "sqlInputPalette.js" _site/boot.js
 
   deploy:
     if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
@@ -57,12 +56,18 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+      - name: Build clean Pages artifact
+        run: npm run build:pages
       - name: Configure Pages
         uses: actions/configure-pages@v6
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v5
         with:
-          path: docs
+          path: _site
       - name: Deploy to Pages
         id: deployment
         uses: actions/deploy-pages@v5
