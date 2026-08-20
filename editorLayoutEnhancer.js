@@ -13,7 +13,7 @@ function clearLegacyCollapseState() {
   catch { /* local storage may be unavailable */ }
 }
 
-function enforceExpandedPalette() {
+function enforceExpandedPaletteOnce() {
   if (!palette) return;
 
   const collapseButton = palette.querySelector('.sql-palette-collapse');
@@ -28,17 +28,18 @@ function enforceExpandedPalette() {
 
 if (editorCard && palette) {
   clearLegacyCollapseState();
-  enforceExpandedPalette();
+  enforceExpandedPaletteOnce();
 
   palette.classList.add('panel', 'sql-input-palette-card');
   palette.dataset.mobilePanel = 'editor';
   editorCard.before(palette);
 
-  new MutationObserver(enforceExpandedPalette).observe(palette, {
-    childList: true,
-    subtree: true,
-    attributes: true,
-    attributeFilter: ['class'],
+  // sqlInputPalette.js calculates its scale before this enhancer moves the panel
+  // into the final grid. Re-run the existing resize-driven fit once after the
+  // browser has committed the final layout. Do not observe palette mutations:
+  // fitting itself changes classes/styles and would create avoidable feedback.
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => window.dispatchEvent(new Event('resize')));
   });
 }
 
