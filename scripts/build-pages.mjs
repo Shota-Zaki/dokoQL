@@ -15,6 +15,7 @@ const publicFiles = [
   'fixes.js',
   'contentIntegration.js',
   'sourcePromptIntegration.js',
+  'answerAliasPromptEnhancer.js',
   'learningContent.js',
   'tableGuideEnhancer.js',
   'dbNotesEnhancer.js',
