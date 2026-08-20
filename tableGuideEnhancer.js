@@ -1,8 +1,6 @@
 import { DATASETS } from './datasets.js';
 import { EXERCISES_BY_DATASET } from './exercises.js';
 
-const PREFIX_PATTERN = /^(使用テーブル|対象テーブル|作成・変更対象|参照対象):/;
-
 function tableNamesFromSeed(datasetId) {
   const seed = DATASETS[datasetId]?.seedSql || '';
   const names = [];
@@ -70,9 +68,10 @@ function guideFor(exercise, tables) {
 for (const [datasetId, exercises] of Object.entries(EXERCISES_BY_DATASET)) {
   const knownTables = tableNamesFromSeed(datasetId);
   for (const exercise of exercises) {
-    if (!exercise?.prompt || PREFIX_PATTERN.test(exercise.prompt.trimStart())) continue;
+    if (!exercise?.prompt) continue;
     const tables = tablesUsedByExercise(exercise, knownTables);
+    // 問題文は exercises.js の正本文面をそのまま保持する。
+    // 使用テーブル情報は prompt へ連結せず、独立メタデータとしてのみ付与する。
     exercise.tableGuide = guideFor(exercise, tables);
-    exercise.prompt = `${exercise.tableGuide}\n\n${exercise.prompt}`;
   }
 }

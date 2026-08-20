@@ -14,7 +14,7 @@ const expectedCounts = {
 
 const errors = [];
 const ids = new Set();
-const tableGuidePattern = /^(使用テーブル|対象テーブル|作成・変更対象|参照対象): .+\n\n/;
+const tableGuidePattern = /^(使用テーブル|対象テーブル|作成・変更対象|参照対象): .+$/;
 
 for (const datasetId of DATASET_ORDER) {
   if (!DATASETS[datasetId]) errors.push(`dataset not found: ${datasetId}`);
@@ -38,8 +38,8 @@ for (const exercise of EXERCISES) {
   if (!exercise.referenceAnswerSql?.trim()) errors.push(`${exercise.id}: detailed answer example is missing`);
   if (!exercise.referenceExplanation?.trim()) errors.push(`${exercise.id}: detailed explanation is missing`);
   if (!DATASETS[exercise.datasetId]) errors.push(`${exercise.id}: unknown dataset ${exercise.datasetId}`);
-  if (!exercise.tableGuide?.trim()) errors.push(`${exercise.id}: table guidance is missing`);
-  if (!tableGuidePattern.test(exercise.prompt || '')) errors.push(`${exercise.id}: problem text does not start with table guidance`);
+  if (!exercise.tableGuide?.trim()) errors.push(`${exercise.id}: table guidance metadata is missing`);
+  else if (!tableGuidePattern.test(exercise.tableGuide)) errors.push(`${exercise.id}: invalid table guidance metadata`);
 }
 
 if (EXERCISES.length !== Object.values(expectedCounts).reduce((sum, value) => sum + value, 0)) {
@@ -52,4 +52,4 @@ if (errors.length) {
   process.exit(1);
 }
 
-console.log(`Data check passed: ${EXERCISES.length} exercises across ${DATASET_ORDER.length} datasets, all with table guidance.`);
+console.log(`Data check passed: ${EXERCISES.length} exercises across ${DATASET_ORDER.length} datasets, all with separate table guidance metadata.`);
