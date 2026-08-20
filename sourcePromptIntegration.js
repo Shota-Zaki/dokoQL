@@ -2,14 +2,24 @@ import { EXERCISES_BY_DATASET } from './exercises.js';
 import { BANK_SOURCE_PROMPTS } from './content/source-prompts-bank.js';
 import { STORE_SOURCE_PROMPTS } from './content/source-prompts-store.js';
 import { RPG_SOURCE_PROMPTS } from './content/source-prompts-rpg.js';
+import { NORMALIZATION_SOURCE_PROMPTS } from './content/source-prompts-normalization.js';
+import { DESIGN_SOURCE_PROMPTS } from './content/source-prompts-design.js';
 
 export const SOURCE_PROMPTS_BY_DATASET = Object.freeze({
   bank: BANK_SOURCE_PROMPTS,
   store: STORE_SOURCE_PROMPTS,
   rpg: RPG_SOURCE_PROMPTS,
+  normalization: NORMALIZATION_SOURCE_PROMPTS,
+  design: DESIGN_SOURCE_PROMPTS,
 });
 
-const expectedCounts = Object.freeze({ bank: 75, store: 70, rpg: 70 });
+const expectedCounts = Object.freeze({
+  bank: 75,
+  store: 70,
+  rpg: 70,
+  normalization: 22,
+  design: 16,
+});
 
 for (const [datasetId, prompts] of Object.entries(SOURCE_PROMPTS_BY_DATASET)) {
   const rows = EXERCISES_BY_DATASET[datasetId] || [];
