@@ -2,6 +2,7 @@ import '../fixes.js';
 import { DATASETS, DATASET_ORDER } from '../datasets.js';
 import { EXERCISES, EXERCISES_BY_DATASET } from '../exercises.js';
 await import('../contentIntegration.js');
+await import('../sourcePromptIntegration.js');
 await import('../tableGuideEnhancer.js');
 
 const expectedCounts = {
@@ -52,4 +53,4 @@ if (errors.length) {
   process.exit(1);
 }
 
-console.log(`Data check passed: ${EXERCISES.length} exercises across ${DATASET_ORDER.length} datasets, all with separate table guidance metadata.`);
+console.log(`Data check passed: ${EXERCISES.length} exercises across ${DATASET_ORDER.length} datasets, with canonical SQL drill prompts and separate table guidance metadata.`);
