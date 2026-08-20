@@ -11,6 +11,8 @@ nextButton.setAttribute('aria-label', '次の問題へ進む');
 
 resetButton?.insertAdjacentElement('afterend', nextButton);
 
+let navigating = false;
+
 function visibleExercises() {
   return Array.from(exerciseList?.querySelectorAll('[data-exercise-id]') || []);
 }
@@ -24,7 +26,7 @@ function syncNextButton() {
   const index = activeIndex(rows);
   const dbBusy = document.getElementById('dbStatus')?.textContent?.includes('中');
 
-  if (!rows.length) {
+  if (navigating || !rows.length) {
     nextButton.disabled = true;
     return;
   }
@@ -38,14 +40,26 @@ function syncNextButton() {
 }
 
 nextButton.addEventListener('click', () => {
-  if (nextButton.disabled) return;
+  if (nextButton.disabled || navigating) return;
+
   const rows = visibleExercises();
   const index = activeIndex(rows);
   const target = index < 0 ? rows[0] : rows[index + 1];
-  target?.click();
+  if (!target) return;
+
+  navigating = true;
+  nextButton.disabled = true;
+
+  // Let the disabled state paint before problem selection starts. The selection
+  // path may initialize the browser-side DB, so duplicate clicks must not start
+  // overlapping navigation work.
   requestAnimationFrame(() => {
-    sqlEditor?.focus();
-    syncNextButton();
+    target.click();
+    requestAnimationFrame(() => {
+      navigating = false;
+      sqlEditor?.focus();
+      syncNextButton();
+    });
   });
 });
 
