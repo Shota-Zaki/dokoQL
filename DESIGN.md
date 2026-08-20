@@ -28,7 +28,15 @@
 - 問題切替ではDB初期化、下書き保存など既存処理を再利用する。
 - `次の問題` の連打は抑止し、1回の操作につき1回だけ問題切替処理を開始する。
 
-## 5. Click input
+## 5. Exercise text integrity
+
+- `exercises.js` の `prompt` を演習問題文の唯一の正本とする。
+- 表示時に問題文へ補足、使用テーブル、ヒント、説明文、接頭辞・接尾辞を連結しない。
+- 使用テーブル等の補助情報は `tableGuide` など別メタデータとして保持し、`prompt` を変更しない。
+- Enhancer / UI / 初期化処理は `prompt` を再代入してはならない。
+- CIでEnhancer実行前後の全 `prompt` を文字列完全一致で比較し、1文字でも変化した場合は失敗させる。
+
+## 6. Click input
 
 - SQL作成補助ツールとしてSQL EDITORとは別カードにする。
 - SQL文、テーブル、カラムをクリックでカーソル位置へ挿入できる。
@@ -41,21 +49,21 @@
 - **自分自身のサイズをResizeObserverで監視し、そのコールバック内で自分自身のサイズを変更してはならない。** レイアウト再計算のフィードバックループを禁止する。
 - 収まらない場合は縮小を無限に繰り返さず、内部スクロールへフォールバックする。
 
-## 6. SQL EDITOR / RESULT
+## 7. SQL EDITOR / RESULT
 
 - textareaはカード内の残り高を最大限使用する。
 - 実行 / 判定 / DB初期化 / 次の問題 / ヒント / 解答例を提供する。
 - RESULTは右下段を横断し、多い結果はRESULT内部だけをスクロールする。
 
-## 7. Database inspector
+## 8. Database inspector
 
 DATABASEではテーブル一覧、現在データ、列名、型、NULL、既定値、主キー、外部キー、論理参照、CHECK等の制約、用途・備考を確認できる。
 
-## 8. SQL reference
+## 9. SQL reference
 
 ヘッダーから `SQL語一覧` を別タブで開く。SQL語 / 関数、意味、基本構文・例、主な用途、注意点、SQL記述順、概念上の処理順を検索可能な一覧で提供する。
 
-## 9. Core interactions
+## 10. Core interactions
 
 - SQLをブラウザ内DBで実行する。
 - SELECTは期待結果、INSERT / UPDATE / DELETEは対象テーブル状態、DDLはschema metadataで判定する。
@@ -64,7 +72,7 @@ DATABASEではテーブル一覧、現在データ、列名、型、NULL、既�
 - エラー・不正解後も何度でも再試行できる。
 - 問題ごとの入力SQL、正誤、解答回数、最終実行日時、見直し、最後の問題、UI状態をlocalStorageへ保存する。
 
-## 10. Technical / publication policy
+## 11. Technical / publication policy
 
 - リポジトリ直下のアプリファイルを唯一の正本とする。
 - 公開コピーを `docs/` 等に二重管理しない。
@@ -72,7 +80,7 @@ DATABASEではテーブル一覧、現在データ、列名、型、NULL、既�
 - 公開対象はビルドスクリプトの明示リストで管理し、README、設計書、検査スクリプト等を公開成果物へ混入させない。
 - ブラウザ内SQL実行環境を利用し、入力SQLを外部サービスへ送信しない。
 
-## 11. Accessibility
+## 12. Accessibility
 
 - キーボードだけで主要操作可能にする。
 - 実行は Ctrl/Cmd + Enter。
@@ -80,15 +88,17 @@ DATABASEではテーブル一覧、現在データ、列名、型、NULL、既�
 - 色だけで正誤を伝えない。
 - クリック入力のチップは判読性と押下領域を両立する。
 
-## 12. Completion criteria
+## 13. Completion criteria
 
 1. PCでページ全体の縦スクロールが原則発生しない。
 2. 問題 / DATABASE / クリック入力 / SQL EDITOR / RESULTが同一画面で確認できる。
-3. クリック入力は常時展開され、操作中にブラウザが固まらない。
-4. クリック入力の自動調整は `0.68` まで縮小でき、最終レイアウト確定後のサイズを基準に再計算される。
-5. ResizeObserver / MutationObserver等による自己リサイズ・自己DOM更新の再帰ループがない。
-6. `次の問題` を1回押したときに問題切替が1回だけ実行され、連打で重複処理が開始されない。
-7. 実行 / 判定 / DB初期化 / 次の問題が動作する。
-8. `npm run check` が成功する。
-9. `npm run build:pages` が毎回クリーンな `_site/` を生成する。
-10. GitHub Pagesは `_site/` のみを公開する。
+3. `exercises.js` の全問題文が表示時にも文字列完全一致で保持される。
+4. 使用テーブル等の補助情報を付与しても `prompt` が変更されない。
+5. クリック入力は常時展開され、操作中にブラウザが固まらない。
+6. クリック入力の自動調整は `0.68` まで縮小でき、最終レイアウト確定後のサイズを基準に再計算される。
+7. ResizeObserver / MutationObserver等による自己リサイズ・自己DOM更新の再帰ループがない。
+8. `次の問題` を1回押したときに問題切替が1回だけ実行され、連打で重複処理が開始されない。
+9. 実行 / 判定 / DB初期化 / 次の問題が動作する。
+10. `npm run check` が成功する。問題文完全一致チェックを含む。
+11. `npm run build:pages` が毎回クリーンな `_site/` を生成する。
+12. GitHub Pagesは `_site/` のみを公開する。
