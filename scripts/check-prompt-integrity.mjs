@@ -3,7 +3,13 @@ import { EXERCISES, EXERCISES_BY_DATASET } from '../exercises.js';
 await import('../contentIntegration.js');
 const { SOURCE_PROMPTS_BY_DATASET } = await import('../sourcePromptIntegration.js');
 
-const expectedCounts = { bank: 75, store: 70, rpg: 70 };
+const expectedCounts = {
+  bank: 75,
+  store: 70,
+  rpg: 70,
+  normalization: 22,
+  design: 16,
+};
 const errors = [];
 
 for (const [datasetId, expectedCount] of Object.entries(expectedCounts)) {
@@ -45,4 +51,4 @@ if (errors.length) {
   process.exit(1);
 }
 
-console.log('Prompt integrity OK: 215 SQL drill prompts exactly match canonical source transcriptions and remain unchanged after enhancers.');
+console.log(`Prompt integrity OK: ${EXERCISES.length} exercise prompts exactly match canonical transcriptions and remain unchanged after enhancers.`);
