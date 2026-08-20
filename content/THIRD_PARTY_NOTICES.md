@@ -1,0 +1,15 @@
+# Third-party dataset notice
+
+The bank, store, and RPG drill seed datasets are adapted from:
+
+- `miyabilink/sukkiri-sql4-codes/setup/chapac/pre_quizapx1.sql`
+- `miyabilink/sukkiri-sql4-codes/setup/chapac/pre_quizapx2.sql`
+- `miyabilink/sukkiri-sql4-codes/setup/chapac/pre_quizapx3.sql`
+
+Copyright: flairLink corporation.
+
+The upstream repository states that the software is licensed under Creative Commons BY-SA 4.0 together with supplemental terms in its `LICENSE.txt`. The supplemental terms state that use is limited to eligible purchasers of the corresponding book. The upstream software is provided AS-IS and without warranty.
+
+Upstream repository: `https://github.com/miyabilink/sukkiri-sql4-codes`
+
+Upstream license terms: `https://github.com/miyabilink/sukkiri-sql4-codes/blob/main/LICENSE.txt`
