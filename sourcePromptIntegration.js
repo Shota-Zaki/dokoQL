@@ -205,3 +205,16 @@ for (const [id, override] of Object.entries(answerOverrides)) {
   exercise.referenceAnswerSql = override.sql;
   if (override.ordered !== undefined) exercise.ordered = override.ordered;
 }
+
+// The SQL shown in the answer dialog is referenceAnswerSql when detailed content exists.
+// The judge historically executed answerSql, which allowed the displayed answer and
+// judge baseline to diverge. Make the displayed/reference answer the single canonical
+// answer used by display, copy, and judging.
+for (const exercise of byId.values()) {
+  const canonicalAnswer = exercise.referenceAnswerSql?.trim()
+    ? exercise.referenceAnswerSql
+    : exercise.answerSql;
+  if (!canonicalAnswer?.trim()) continue;
+  exercise.answerSql = canonicalAnswer;
+  exercise.referenceAnswerSql = canonicalAnswer;
+}

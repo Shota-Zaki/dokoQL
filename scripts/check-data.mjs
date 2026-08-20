@@ -37,6 +37,9 @@ for (const exercise of EXERCISES) {
 
   if (!exercise.answerSql?.trim()) errors.push(`${exercise.id}: answer example is missing`);
   if (!exercise.referenceAnswerSql?.trim()) errors.push(`${exercise.id}: detailed answer example is missing`);
+  if (exercise.answerSql !== exercise.referenceAnswerSql) {
+    errors.push(`${exercise.id}: displayed answer and judge answer differ`);
+  }
   if (!exercise.referenceExplanation?.trim()) errors.push(`${exercise.id}: detailed explanation is missing`);
   if (!DATASETS[exercise.datasetId]) errors.push(`${exercise.id}: unknown dataset ${exercise.datasetId}`);
   if (!exercise.tableGuide?.trim()) errors.push(`${exercise.id}: table guidance metadata is missing`);
@@ -53,4 +56,4 @@ if (errors.length) {
   process.exit(1);
 }
 
-console.log(`Data check passed: ${EXERCISES.length} exercises across ${DATASET_ORDER.length} datasets, with canonical SQL drill prompts and separate table guidance metadata.`);
+console.log(`Data check passed: ${EXERCISES.length} exercises across ${DATASET_ORDER.length} datasets, with canonical prompts, separate table guidance metadata, and identical displayed/judged answers.`);
