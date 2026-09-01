@@ -23,7 +23,7 @@
 
 ## 構成
 
-リポジトリ直下のアプリファイルを正本とします。GitHub Pages用の公開コピーはGit管理せず、CIが `_site/` を毎回クリーン生成します。
+リポジトリ直下のアプリファイルを正本とします。公開用コピーはGit管理せず、`npm run build:pages` が `_site/` をクリーン生成します。
 
 ```text
 .
@@ -35,10 +35,9 @@
 ├── exercises.js
 ├── content/
 ├── DESIGN.md
-├── scripts/
-│   ├── check-data.mjs
-│   └── build-pages.mjs
-└── .github/workflows/pages.yml
+└── scripts/
+    ├── check-data.mjs
+    └── build-pages.mjs
 ```
 
 ## ローカル確認
@@ -64,7 +63,15 @@ npm run build:pages
 
 ## 公開
 
-`main` 更新時にGitHub Actionsが検査後、`_site/` をGitHub Pagesへデプロイします。`docs/` の手動同期は行いません。
+GitHub Actionsは使用しません。公開前の生成物は `npm run build:pages` で作成し、実際の外部公開はRepositoryの運用ルールとユーザーの明示指示に従います。
+
+## 進行管理
+
+- 恒久ルール: `AGENTS.md`
+- 進行・Task状態・残件の正本: `task-list.md`
+- 次に行う1工程: `NEXT_WORK.md`
+
+READMEには現在Task、HEAD、PRなどの動的進行情報を固定しません。
 
 ## データ方針
 
