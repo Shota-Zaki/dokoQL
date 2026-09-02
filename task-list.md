@@ -27,3 +27,12 @@
 - READMEへ現在TaskやHEAD等のlive値を記録しない。
 - **すべての作業で、このファイルと`NEXT_WORK.md`を必ず更新する。**
 - 検証方法は既存Repository仕様に従い、この運用統一では変更しない。
+
+## Repository Operations Log
+
+### 2026-09-02 — ChatGPT/Codex検証入口
+
+- `npm run verify:agent`を追加した。
+- 既存の`check`と`build:pages`を順番に呼ぶbaselineとした。
+- `VERIFY_AGENT.md`に固定SHA、Task固有追加検証、未実施の扱い、証拠記録ルールを定義した。
+- ブラウザ操作などCurrent Task固有の検証はAcceptance Criteriaから追加実行する。
