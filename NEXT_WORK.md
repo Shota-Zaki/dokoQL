@@ -9,6 +9,7 @@
 - Next Action: `次に進めるTaskを指定する`
 - Blocking / unresolved: `currentTask未設定`
 - Next Command: `なし`
+- Verification entrypoint: `npm run verify:agent`
 
 ## Mandatory update rule
 
