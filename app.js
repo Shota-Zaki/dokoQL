@@ -286,7 +286,6 @@ async function judgeUserSql() {
   } catch (error) {
     console.error(error);
     state.busy = false;
-    setBusyError_PLACEHOLDER
     setDbError('判定処理エラー');
     showJudge('incorrect', `判定処理でエラーが発生しました: ${friendlyError(error)}`);
   }
@@ -450,7 +449,7 @@ function showAnswer() {
   const ex = currentExercise();
   if (!ex) return;
   els.answerSql.textContent = ex.answerSql || '解答例は準備中です。';
-  els.answerExplanation.innerHTML = ex.explanation ? `<p>${escapeHtml(ex.explanation)}</p>` : '<p>問題の条件をSQLの句・式へ分解して確認してください。</p>';
+  els.answerExplanation.innerHTML = ex.explanation ? `<p>${escapeHtml(ex.explanation)}</p>` : '<p>問題の条件をSQLの句・式へ分解して確認します。</p>';
   els.copyAnswerButton.disabled = !ex.answerSql;
   els.answerDialog.showModal();
 }
