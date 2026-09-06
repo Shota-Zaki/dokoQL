@@ -449,7 +449,7 @@ function showAnswer() {
   const ex = currentExercise();
   if (!ex) return;
   els.answerSql.textContent = ex.answerSql || '解答例は準備中です。';
-  els.answerExplanation.innerHTML = ex.explanation ? `<p>${escapeHtml(ex.explanation)}</p>` : '<p>問題の条件をSQLの句・式へ分解して確認します。</p>';
+  els.answerExplanation.innerHTML = ex.explanation ? `<p>${escapeHtml(ex.explanation)}</p>` : '<p>問題の条件をSQLの句・式へ分解して確認してください。</p>';
   els.copyAnswerButton.disabled = !ex.answerSql;
   els.answerDialog.showModal();
 }
