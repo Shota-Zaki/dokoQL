@@ -286,6 +286,7 @@ async function judgeUserSql() {
   } catch (error) {
     console.error(error);
     state.busy = false;
+    setBusyError_PLACEHOLDER
     setDbError('判定処理エラー');
     showJudge('incorrect', `判定処理でエラーが発生しました: ${friendlyError(error)}`);
   }
@@ -522,7 +523,7 @@ async function boot() {
   bindEvents();
   setupMobile();
 
-  const savedDataset = DATASETS[state.session.datasetId] ? state.session.datasetId : 'bank';
+  const savedDataset = Object.hasOwn(DATASETS, state.session.datasetId) ? state.session.datasetId : 'bank';
   state.datasetId = savedDataset;
   els.datasetSelect.value = savedDataset;
   state.chapter = state.session.chapter ?? 'all';
