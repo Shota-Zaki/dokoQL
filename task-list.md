@@ -36,3 +36,9 @@
 - 既存の`check`と`build:pages`を順番に呼ぶbaselineとした。
 - `VERIFY_AGENT.md`に固定SHA、Task固有追加検証、未実施の扱い、証拠記録ルールを定義した。
 - ブラウザ操作などCurrent Task固有の検証はAcceptance Criteriaから追加実行する。
+### 2026-09-24 — Japan-Learning-Lab境界整理
+
+- 本Repositoryを独立SQL Practice Labとして維持し、`Shota-Zaki/Japan-Learning-Lab` のDB / SQL laneとの自動同期・双方向同期を行わない契約をREADMEへ追加した。
+- 再利用時はID / 出典 / license / expected result / 保存契約の対応表を先に作り、移管または参照として扱う。
+- 製品実装Taskは新設していない。currentTaskは`未設定`のまま。
+
