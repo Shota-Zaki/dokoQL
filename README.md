@@ -61,6 +61,13 @@ npm run build:pages
 
 `npm run check` はJavaScript構文、問題数、ID重複、必須フィールド等を検査します。`npm run build:pages` は公開に必要なファイルだけを `_site/` へ生成します。
 
+## Japan-Learning-Lab との責務境界
+
+- 本Repositoryは独立したSQL Practice Labとして保持する。
+- `Shota-Zaki/Japan-Learning-Lab` のDB / SQL laneとは自動同期・双方向同期しない。
+- 問題、runner、dataset、保存仕様を再利用する場合は、Task開始時にID / 出典 / license / expected result / 保存契約の対応表を作り、コピーで二重保守せず「移管」または「参照」のどちらかを明示する。
+- Japan-Learning-Lab側の統合Product変更を、本Repositoryの未設定Taskとして暗黙に取り込まない。
+
 ## 公開
 
 GitHub Actionsは使用しません。公開前の生成物は `npm run build:pages` で作成し、実際の外部公開はRepositoryの運用ルールとユーザーの明示指示に従います。
