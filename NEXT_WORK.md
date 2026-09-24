@@ -7,7 +7,7 @@
 - Next Role: `Repository owner`
 - Branch: `work`
 - Next Action: `次に進めるTaskを指定する`
-- Blocking / unresolved: `currentTask未設定`
+- Blocking / unresolved: `currentTask未設定`。Japan-Learning-LabとのSQL資産再利用は、ID / 出典 / license / expected result / 保存契約の対応表を作る専用Taskが設定されるまで開始しない。
 - Next Command: `なし`
 - Verification entrypoint: `npm run verify:agent`
 
